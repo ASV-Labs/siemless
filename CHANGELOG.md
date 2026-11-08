@@ -52,3 +52,6 @@ First release, built for the Nous Research Hermes Agent Plugin Hackathon.
 - Desktop tiles read "84 findings 24h · 0 total" and "0 sessions": both came from the reading process's own counters, which the Desktop page's read-only process never moves. `findings_total` now counts the store (the old counter is `findings_since_start`), and a new `sessions_24h` counts distinct sessions in the store.
 - A curl upload named the same file twice (`read_file` path, then `@/path` from `-d @file`), so one key read produced two SL-003 findings; `--data-binary=@/path` and `-F file=@/path` were not recognised at all. Upload forms now resolve to the bare path.
 - SL-001's sentence read "preceded a exec to …"; it now reads "preceded egress to HOST (exec via terminal)".
+- Detection latency was always empty on the Desktop page and in `hermes siemless status`, which read through their own process; it is now stored with each finding (not exported) and read back from there.
+- `hermes siemless status` outside the agent printed that process's own zeros as if they were the agent's ("events processed 0"); it now shows store figures only, and the Desktop page shows the store size in place of a queue that is always empty there.
+- The demo receiver says plainly when its port is taken, and the page names the collector on the receiver's real port (`--port`).

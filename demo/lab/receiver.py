@@ -106,7 +106,11 @@ def main() -> int:
     a = ap.parse_args()
     Handler.demo_home = str(Path(a.home).resolve())
     Handler.demo_port = a.port
-    srv = ThreadingHTTPServer(("127.0.0.1", a.port), Handler)
+    try:
+        srv = ThreadingHTTPServer(("127.0.0.1", a.port), Handler)
+    except OSError as exc:
+        print(f"cannot listen on 127.0.0.1:{a.port} ({exc.strerror}); another app may hold it. Pick a free one with --port N.", file=sys.stderr)
+        return 1
     print(f"siemless demo receiver on http://127.0.0.1:{a.port}  (page: /page, collector: /collect, summit stand-in: /ingest)")
     print(f"fixture home: {Handler.demo_home}")
     print(f"logs: {Handler.logs}")

@@ -372,7 +372,10 @@ function SiemlessPage() {
       h(Tile, { label: 'events 24h', value: st ? st.events_24h : null, sub: st && st.kinds_24h ? `${Object.keys(st.kinds_24h).length} kinds` : '' }),
       h(Tile, { label: 'findings 24h', value: st ? Object.values(st.findings_24h || {}).reduce((a, b) => a + b, 0) : null, sub: st ? `${st.findings_total} total` : '', tone: st && (st.findings_24h.high || st.findings_24h.critical) ? 'text-(--ui-danger)' : null }),
       h(Tile, { label: 'sessions 24h', value: st ? (st.sessions_24h != null ? st.sessions_24h : st.correlator ? st.correlator.sessions : null) : null, sub: st ? `${st.hosts_known} hosts known` : '' }),
-      h(Tile, { label: 'queue', value: st && st.queue ? `${st.queue.size}/${st.queue.capacity}` : null, sub: st && st.queue ? `${st.queue.dropped} dropped` : '', tone: queueTone }),
+      // The page reads through its own process, whose queue is always empty; show the queue only where it is real.
+      st && st.live === false
+        ? h(Tile, { label: 'store', value: st.db_bytes != null ? `${(st.db_bytes / 1048576).toFixed(1)} MB` : null, sub: 'on this machine' })
+        : h(Tile, { label: 'queue', value: st && st.queue ? `${st.queue.size}/${st.queue.capacity}` : null, sub: st && st.queue ? `${st.queue.dropped} dropped` : '', tone: queueTone }),
       h(Tile, { label: 'exporters', value: st && st.exporters ? st.exporters.length : null, sub: badExporters ? `${badExporters} failing` : 'healthy', tone: badExporters ? 'text-(--ui-danger)' : null }),
       h(Tile, { label: 'detect latency', value: st && st.latency_ms && st.latency_ms.p50 != null ? `${st.latency_ms.p50} ms` : null, sub: st && st.latency_ms && st.latency_ms.p95 != null ? `p95 ${st.latency_ms.p95} ms` : 'hook → finding' }),
       h('div', { className: 'flex flex-1 flex-col justify-center px-2' }, h(SeverityBar, { counts: (st && st.findings_24h) || {} }))

@@ -34,15 +34,22 @@ def _fmt_time(ms: Optional[int]) -> str:
 
 
 def status_text(st: dict) -> str:
-    lines = [f"siemless {st['version']} · profile {st.get('profile') or 'default'} · host {st.get('hostname')}",
-             f"events processed {st['processed']} (24h: {st['events_24h']}), dropped before queue {st['dropped_in']}",
-             f"findings {st['findings_total']} total; 24h by severity: {st['findings_24h'] or {}}",
-             f"rules enabled {st['rules']['enabled']} · evaluations {st['rules']['evaluations']} · suppressed {st['rules']['suppressed']}",
-             f"correlator sessions {st['correlator']['sessions']} · window {st['correlator']['window_ms'] // 60000} min · hosts known {st['hosts_known']}",
-             f"queue {st['queue']['size']}/{st['queue']['capacity']} · dropped {st['queue']['dropped']} · worker {'alive' if st['queue']['worker_alive'] else 'STOPPED'}",
-             f"export scope {st['export_scope']} · remote export {'ON' if st['remote_export'] else 'off (consent not given)'}",
-             f"detection latency p50 {st['latency_ms']['p50']} ms · p95 {st['latency_ms']['p95']} ms (n={st['latency_ms']['n']})",
-             "exporters:"]
+    lat = st["latency_ms"]
+    header = f"siemless {st['version']} · profile {st.get('profile') or 'default'} · host {st.get('hostname')}"
+    findings = f"findings {st['findings_total']} total; 24h by severity: {st['findings_24h'] or {}}"
+    if st.get("live"):
+        lines = [header,
+                 f"events processed {st['processed']} (24h: {st['events_24h']}), dropped before queue {st['dropped_in']}",
+                 findings,
+                 f"rules enabled {st['rules']['enabled']} · evaluations {st['rules']['evaluations']} · suppressed {st['rules']['suppressed']}",
+                 f"correlator sessions {st['correlator']['sessions']} · window {st['correlator']['window_ms'] // 60000} min · hosts known {st['hosts_known']}",
+                 f"queue {st['queue']['size']}/{st['queue']['capacity']} · dropped {st['queue']['dropped']} · worker {'alive' if st['queue']['worker_alive'] else 'STOPPED'}"]
+    else:  # this process only reads the store; the queue and the counters belong to the agent's process
+        lines = [header, f"events 24h {st['events_24h']} · sessions 24h {st.get('sessions_24h', 0)} · hosts known {st['hosts_known']}",
+                 findings, f"rules enabled {st['rules']['enabled']}"]
+    lines += [f"export scope {st['export_scope']} · remote export {'ON' if st['remote_export'] else 'off (consent not given)'}",
+              f"detection latency p50 {lat['p50']} ms · p95 {lat['p95']} ms (n={lat['n']})" if lat["n"] else "detection latency: no findings recorded yet",
+              "exporters:"]
     for ex in st["exporters"]:
         extra = ex.get("target") or ex.get("url") or ex.get("events_path") or ""
         lines.append(f"  {ex['name']:8} {ex['state']:13} sent {ex['sent']:>6} failed {ex['failed']:>4} dropped {ex['dropped']:>4} "

@@ -56,7 +56,6 @@ class Pipeline:
         self.last_event_at: Optional[int] = None
         self.last_finding_at: Optional[int] = None
         self.started_at = int(time.time() * 1000)
-        self.latency_ms: list[float] = []  # last 100 worker latencies, event in → finding out, ms
         self.dispatcher = Dispatcher(spool_dir=self.data_dir / "spool", queue_size=int(self.config["queue_size"]),
                                      spool_max_mb=float(self.config["spool_max_mb"]), on_health=self._save_health, worker=worker)
         self._build_exporters()
@@ -192,7 +191,8 @@ class Pipeline:
         if st is not None:
             for f in engine.evaluate(e, st):
                 fd = finding_to_dict(f, profile=self.profile, replay=replay)
-                self.store.add_finding(fd)
+                # Stored with the finding, not exported: the Desktop page and the CLI read from another process.
+                self.store.add_finding({**fd, "latency_ms": round((time.monotonic() - t0) * 1000, 2)})
                 fe = finding_event(fd)
                 self.store.add_events([fe])
                 corr.add(fe)
@@ -200,9 +200,6 @@ class Pipeline:
                 out.append(fd)
                 self.findings_total += 1
                 self.last_finding_at = fd["detected_at"]
-                self.latency_ms.append(round((time.monotonic() - t0) * 1000, 2))
-                if len(self.latency_ms) > 100:
-                    self.latency_ms.pop(0)
                 self.emit("finding", fd)
         if to_export:
             self.dispatcher.offer(to_export)
@@ -226,6 +223,7 @@ class Pipeline:
     def status(self) -> dict:
         since_day = int(time.time() * 1000) - 86_400_000
         exporters = self.dispatcher.health() if self.live else self._stored_exporters()
+        latency = self.store.finding_latencies()
         return {
             "plugin": PLUGIN_ID, "version": __version__, "profile": self.profile, "hostname": self.hostname,
             "started_at": self.started_at, "processed": self.processed, "dropped_in": self.dropped_in,
@@ -239,7 +237,7 @@ class Pipeline:
             "correlator": self.corr.stats(), "queue": self.dispatcher.queue_health(), "exporters": exporters, "live": self.live,
             "export_scope": self.config["export_scope"], "remote_export": bool(self.config.get("remote_export")),
             "db_bytes": self.store.db_size(), "hosts_known": self.store.host_count(), "sessions_24h": self.store.session_count(since_day),
-            "latency_ms": {"p50": _pct(self.latency_ms, 50), "p95": _pct(self.latency_ms, 95), "n": len(self.latency_ms)},
+            "latency_ms": {"p50": _pct(latency, 50), "p95": _pct(latency, 95), "n": len(latency)},
         }
 
     def _stored_exporters(self) -> list[dict]:

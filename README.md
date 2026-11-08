@@ -21,8 +21,7 @@ hermes plugins install siemless
 > Hermes ≥ 0.21.5. Python standard library only; FastAPI (already in Hermes) for the Desktop
 > page's backend. Upstream `hermes plugins validate`: 16/16 checks pass; security scan *caution*
 > (see Disclosure), so the installer asks you to confirm before it installs (`[y/N]`, or `--force`
-> when scripted) — the findings are SIEMless's own detection patterns. The one rule-9 warning is
-> `tools/admission_lint.py`, a dev script the plugin never imports.
+> when scripted) — the findings are SIEMless's own detection patterns.
 
 ## What you get
 
@@ -229,12 +228,12 @@ demo is the replay.
 ## Development
 
 ```
-python -m pytest -q tests                       # 132 tests: rules, formats (OCSF validated against the 1.9.0 schema), dispatch, privacy canaries, API, demo variants, packs, audit regressions
+python -m pytest -q tests                       # rules, formats (OCSF validated against the 1.9.0 schema), dispatch, privacy canaries, API, demo variants, packs, audit regressions
 cd tests/js && npm install && npm test          # Desktop page rendered against real backend fixtures (tests/js/make_fixtures.py)
 python tests/bench.py                           # agent-thread cost and detection latency
 python tools/gen_sigma.py                       # regenerate the Sigma pack
 python tools/ocsf_check.py --schema <ocsf-schema checkout> --compile siemless_core/data/ocsf_required.json
-python tools/admission_lint.py <hermes-agent checkout>   # upstream's own `hermes plugins validate` logic (needs ruamel.yaml + packaging)
+hermes plugins validate .                       # upstream's admission checks; CI runs them against current Hermes main
 ```
 
 Independent audits: [audit/round1.md](audit/round1.md) (5 high, 14 medium, 9 low) and

@@ -267,6 +267,12 @@ class Store:
                 rows = self._conn.execute("SELECT severity, COUNT(*) c FROM findings WHERE time >= ? GROUP BY severity", (since,)).fetchall()
         return {r["severity"]: int(r["c"]) for r in rows}
 
+    def finding_latencies(self, limit: int = 100) -> list[float]:
+        """Event in → finding out, ms, for the newest findings (older rows have none recorded)."""
+        with self._lock:
+            rows = self._conn.execute("SELECT json_extract(body, '$.latency_ms') ms FROM findings ORDER BY time DESC LIMIT ?", (limit,)).fetchall()
+        return [float(r["ms"]) for r in rows if r["ms"] is not None]
+
     def rule_counts(self, since: Optional[int] = None) -> dict[str, int]:
         with self._lock:
             if since is None:
