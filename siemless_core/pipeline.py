@@ -7,6 +7,7 @@ runs the whole chain synchronously for tests and for ``replay``.
 
 from __future__ import annotations
 
+import contextvars
 import logging
 import queue
 import socket
@@ -75,7 +76,9 @@ class Pipeline:
             self._thread = threading.Thread(target=self._run, name="siemless-pipeline", daemon=True)
             self._thread.start()
             if reload_config is not None:  # its own thread: reading settings can block, and events must not wait on it
-                threading.Thread(target=self._watch_settings, name="siemless-settings", daemon=True).start()
+                # A multiplexed gateway scopes the profile home in a context variable, which a new thread does not inherit.
+                # Without this copy the thread reads another profile's settings and drops this profile's exporters.
+                threading.Thread(target=contextvars.copy_context().run, args=(self._watch_settings,), name="siemless-settings", daemon=True).start()
 
     # ------------------------------------------------------------------ exporters
     def _build_exporters(self) -> None:

@@ -175,3 +175,29 @@ def test_a_fetch_beside_an_upload_is_still_untrusted():
 def test_plain_fetch_and_inline_post_stay_untrusted():
     assert _untrusted(_shell("curl -s https://example.com/page"))
     assert _untrusted(_shell("curl -d q=hello https://example.com/search"))
+
+
+def test_settings_thread_reads_the_profile_that_started_it(tmp_path, monkeypatch):
+    """A multiplexed gateway scopes the profile home in a context variable, and a new thread does not
+    inherit it. Reading settings without it finds another profile's config, with no export settings."""
+    import contextvars
+    import threading
+    import time
+
+    home = contextvars.ContextVar("home", default="another-profile")
+    home.set("this-profile")
+    seen = threading.Event()
+
+    def reader():
+        seen.set()
+        return _settings() if home.get() == "this-profile" else _settings(remote_export=False, summit_url="")
+
+    monkeypatch.setattr(PIPE, "SETTINGS_POLL_S", 0.02)
+    p = PIPE.Pipeline(CFG.load(None, overrides=SUMMIT), data_dir=tmp_path, worker=True, reload_config=reader)
+    try:
+        assert seen.wait(3)
+        time.sleep(0.1)
+        assert "summit" in p.dispatcher.slots
+        assert p.dispatcher.slots["summit"].state != "needs_consent"
+    finally:
+        p.close()
