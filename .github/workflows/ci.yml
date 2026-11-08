@@ -1,0 +1,42 @@
+name: ci
+on:
+  push:
+  pull_request:
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install "pytest>=8,<10" "pyyaml>=6,<7" "fastapi>=0.110,<1" "httpx>=0.27,<1" "jsonschema>=4,<5"
+      - run: python -m pytest -q tests
+  desktop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --check desktop/plugin.js
+      - run: |
+          # rule 8 in one line: no document.querySelector / app markup reach in the desktop half
+          ! grep -nE "document\.(querySelector|getElementsBy|getElementById)|data-slot|data-tour|data-sidebar|data-testid|MutationObserver|window\.hermesDesktop|eval\(|new Function" desktop/plugin.js
+  admission:
+    # The same checks the catalog runs at admission, against the current Hermes main.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: plugin
+      - uses: actions/checkout@v4
+        with:
+          repository: NousResearch/hermes-agent
+          path: hermes-agent
+      - uses: astral-sh/setup-uv@v5
+      - run: cd hermes-agent && uv sync --no-dev
+      - run: cd hermes-agent && uv run hermes plugins validate ../plugin
