@@ -3,8 +3,8 @@
   {
    "kind": "subagent.stop",
    "visibility": "observed",
-   "id": "5064cf3efbf24db6b01279ab812f7eb1",
-   "time": 1794166301503,
+   "id": "19123cfe319448db8b36f9e2ed2d9427",
+   "time": 1794168371385,
    "schema": "siemless.event.v1",
    "session_id": "par6",
    "turn_id": "turn-par6-1",
@@ -40,8 +40,8 @@
   {
    "kind": "content.untrusted",
    "visibility": "inferred",
-   "id": "82cea6a454eb4a30b2c617900f45269c",
-   "time": 1794166301502,
+   "id": "fa5c6bb387364c55918c37c8d198aff2",
+   "time": 1794168371384,
    "schema": "siemless.event.v1",
    "session_id": "kid6",
    "turn_id": "turn-kid6-1",
@@ -68,8 +68,8 @@
   {
    "kind": "finding",
    "visibility": "observed",
-   "id": "f-1fa407a8fdb34dc481186f31beb7e5b1",
-   "time": 1794166301502,
+   "id": "f-6e6446648c274008b5b51bc2730f539a",
+   "time": 1794168371384,
    "schema": "siemless.event.v1",
    "session_id": "kid6",
    "turn_id": "turn-kid6-1",
@@ -83,7 +83,7 @@
      "T1567",
      "T1700"
     ],
-    "finding_id": "1fa407a8fdb34dc481186f31beb7e5b1",
+    "finding_id": "6e6446648c274008b5b51bc2730f539a",
     "replay": true
    },
    "tags": [
@@ -94,16 +94,16 @@
     "SL-001"
    ],
    "evidence": [
-    "c7b3b15eda6e4b0ea85e1418457d1349",
-    "59f709e1a5364a5ea4dba75aa7e82d36",
-    "70e5e0cc18d14f7488855f4524426749"
+    "64df10c8c87b47a6b26488c35ea447bc",
+    "f6f8a54d0666458080ecd87305a4860f",
+    "b8c745f6cc8a483aac76a53538aeb49b"
    ]
   },
   {
    "kind": "net.egress",
    "visibility": "inferred",
-   "id": "70e5e0cc18d14f7488855f4524426749",
-   "time": 1794166301502,
+   "id": "b8c745f6cc8a483aac76a53538aeb49b",
+   "time": 1794168371384,
    "schema": "siemless.event.v1",
    "session_id": "kid6",
    "turn_id": "turn-kid6-1",
@@ -133,18 +133,18 @@
   {
    "kind": "finding",
    "visibility": "observed",
-   "id": "f-863e3792542048f2a5ba4f1269ef2bd6",
-   "time": 1794166301502,
+   "id": "f-bcc48c6fafdf4ef59d77981c982ff0b4",
+   "time": 1794168371384,
    "schema": "siemless.event.v1",
    "session_id": "kid6",
    "turn_id": "turn-kid6-1",
    "profile": "demo",
    "severity": "high",
-   "target": "[REPLAY] Subagent secret.access outside parent scope: @/Users/demo/siemless-lab/.ssh/id_rsa",
+   "target": "[REPLAY] Subagent secret.access outside parent scope: /Users/demo/siemless-lab/.ssh/id_rsa",
    "attrs": {
     "confidence": "medium",
     "attack": [],
-    "finding_id": "863e3792542048f2a5ba4f1269ef2bd6",
+    "finding_id": "bcc48c6fafdf4ef59d77981c982ff0b4",
     "replay": true
    },
    "tags": [
@@ -155,27 +155,27 @@
     "SL-008"
    ],
    "evidence": [
-    "f1796632eb044c338890e2abbe6f5352",
-    "59f709e1a5364a5ea4dba75aa7e82d36"
+    "13886f2512454da895165c9bfcb89297",
+    "f6f8a54d0666458080ecd87305a4860f"
    ]
   },
   {
    "kind": "finding",
    "visibility": "observed",
-   "id": "f-5050528f9e74442da8ec77ae3d70a61b",
-   "time": 1794166301502,
+   "id": "f-6f71f1ae31fe470782dbd35da65594df",
+   "time": 1794168371384,
    "schema": "siemless.event.v1",
    "session_id": "kid6",
    "turn_id": "turn-kid6-1",
    "profile": "demo",
    "severity": "medium",
-   "target": "[REPLAY] Credential store targeted: @/Users/demo/siemless-lab/.ssh/id_rsa",
+   "target": "[REPLAY] Credential store targeted: /Users/demo/siemless-lab/.ssh/id_rsa",
    "attrs": {
     "confidence": "low",
     "attack": [
      "T1552.004"
     ],
-    "finding_id": "5050528f9e74442da8ec77ae3d70a61b",
+    "finding_id": "6f71f1ae31fe470782dbd35da65594df",
     "replay": true
    },
    "tags": [
@@ -186,14 +186,14 @@
     "SL-003"
    ],
    "evidence": [
-    "59f709e1a5364a5ea4dba75aa7e82d36"
+    "f6f8a54d0666458080ecd87305a4860f"
    ]
   },
   {
    "kind": "finding",
    "visibility": "observed",
-   "id": "f-e8367520ab3b4201b9c2c98ba6fe40c2",
-   "time": 1794166301502,
+   "id": "f-4ea34c85672549d5b00e72fd8e416fb0",
+   "time": 1794168371384,
    "schema": "siemless.event.v1",
    "session_id": "kid6",
    "turn_id": "turn-kid6-1",
@@ -205,7 +205,7 @@
     "attack": [
      "T1698"
     ],
-    "finding_id": "e8367520ab3b4201b9c2c98ba6fe40c2",
+    "finding_id": "4ea34c85672549d5b00e72fd8e416fb0",
     "replay": true
    },
    "tags": [
@@ -216,15 +216,15 @@
     "SL-002"
    ],
    "evidence": [
-    "c58b809909154088bbce600b34e3b80b",
-    "59f709e1a5364a5ea4dba75aa7e82d36"
+    "db440c295ed84af48ee055a2c802682b",
+    "f6f8a54d0666458080ecd87305a4860f"
    ]
   },
   {
    "kind": "secret.access",
    "visibility": "inferred",
-   "id": "59f709e1a5364a5ea4dba75aa7e82d36",
-   "time": 1794166301502,
+   "id": "f6f8a54d0666458080ecd87305a4860f",
+   "time": 1794168371384,
    "schema": "siemless.event.v1",
    "session_id": "kid6",
    "turn_id": "turn-kid6-1",
@@ -237,7 +237,7 @@
    "tool": "terminal",
    "action": "exec",
    "severity": "medium",
-   "target": "@/Users/demo/siemless-lab/.ssh/id_rsa",
+   "target": "/Users/demo/siemless-lab/.ssh/id_rsa",
    "attrs": {
     "replay": true
    },
@@ -250,8 +250,8 @@
   {
    "kind": "process.exec",
    "visibility": "inferred",
-   "id": "8bd3b557b316418fbc54f557f98f4215",
-   "time": 1794166301502,
+   "id": "6d5897d09ffc413e8d67430b32ec8af0",
+   "time": 1794168371383,
    "schema": "siemless.event.v1",
    "session_id": "kid6",
    "turn_id": "turn-kid6-1",
@@ -278,8 +278,8 @@
   {
    "kind": "tool.call",
    "visibility": "observed",
-   "id": "af6a1ecdf08d499195034eeed977ad89",
-   "time": 1794166301502,
+   "id": "b4661937aed84a1791d82dfb44376043",
+   "time": 1794168371383,
    "schema": "siemless.event.v1",
    "session_id": "kid6",
    "turn_id": "turn-kid6-1",
@@ -308,8 +308,8 @@
   {
    "kind": "finding",
    "visibility": "observed",
-   "id": "f-10a5ccaeb5524456a949dba455627925",
-   "time": 1794166301500,
+   "id": "f-4ff437ffdcff4a8cac7df100bc727129",
+   "time": 1794168371382,
    "schema": "siemless.event.v1",
    "session_id": "kid6",
    "turn_id": "turn-kid6-1",
@@ -319,7 +319,7 @@
    "attrs": {
     "confidence": "high",
     "attack": [],
-    "finding_id": "10a5ccaeb5524456a949dba455627925",
+    "finding_id": "4ff437ffdcff4a8cac7df100bc727129",
     "replay": true
    },
    "tags": [
@@ -330,15 +330,15 @@
     "SL-008"
    ],
    "evidence": [
-    "f1796632eb044c338890e2abbe6f5352",
-    "c7b3b15eda6e4b0ea85e1418457d1349"
+    "13886f2512454da895165c9bfcb89297",
+    "64df10c8c87b47a6b26488c35ea447bc"
    ]
   },
   {
    "kind": "finding",
    "visibility": "observed",
-   "id": "f-4453c605b12d408996b1bbdae72461ec",
-   "time": 1794166301500,
+   "id": "f-b38a538053c64cc796afac68e679531f",
+   "time": 1794168371382,
    "schema": "siemless.event.v1",
    "session_id": "kid6",
    "turn_id": "turn-kid6-1",
@@ -350,7 +350,7 @@
     "attack": [
      "T1552.004"
     ],
-    "finding_id": "4453c605b12d408996b1bbdae72461ec",
+    "finding_id": "b38a538053c64cc796afac68e679531f",
     "replay": true
    },
    "tags": [
@@ -361,14 +361,14 @@
     "SL-003"
    ],
    "evidence": [
-    "c7b3b15eda6e4b0ea85e1418457d1349"
+    "64df10c8c87b47a6b26488c35ea447bc"
    ]
   },
   {
    "kind": "finding",
    "visibility": "observed",
-   "id": "f-c95f9dcde05f48d796396012b5e447ba",
-   "time": 1794166301500,
+   "id": "f-0784cbe60472450e8f288995152052be",
+   "time": 1794168371382,
    "schema": "siemless.event.v1",
    "session_id": "kid6",
    "turn_id": "turn-kid6-1",
@@ -380,7 +380,7 @@
     "attack": [
      "T1698"
     ],
-    "finding_id": "c95f9dcde05f48d796396012b5e447ba",
+    "finding_id": "0784cbe60472450e8f288995152052be",
     "replay": true
    },
    "tags": [
@@ -391,15 +391,15 @@
     "SL-002"
    ],
    "evidence": [
-    "c58b809909154088bbce600b34e3b80b",
-    "c7b3b15eda6e4b0ea85e1418457d1349"
+    "db440c295ed84af48ee055a2c802682b",
+    "64df10c8c87b47a6b26488c35ea447bc"
    ]
   },
   {
    "kind": "secret.access",
    "visibility": "observed",
-   "id": "c7b3b15eda6e4b0ea85e1418457d1349",
-   "time": 1794166301500,
+   "id": "64df10c8c87b47a6b26488c35ea447bc",
+   "time": 1794168371382,
    "schema": "siemless.event.v1",
    "session_id": "kid6",
    "turn_id": "turn-kid6-1",
@@ -424,8 +424,8 @@
   {
    "kind": "file.read",
    "visibility": "observed",
-   "id": "d13bf52cb2304104890c76d8f7a8bc85",
-   "time": 1794166301500,
+   "id": "f02b6c0e808948b6be7fd24e42750a17",
+   "time": 1794168371382,
    "schema": "siemless.event.v1",
    "session_id": "kid6",
    "turn_id": "turn-kid6-1",
@@ -450,8 +450,8 @@
   {
    "kind": "tool.call",
    "visibility": "observed",
-   "id": "7a3b32fa1b9646a7844dffbffdf341c4",
-   "time": 1794166301500,
+   "id": "42c426fa7f504fcbbe9f5bce20491432",
+   "time": 1794168371382,
    "schema": "siemless.event.v1",
    "session_id": "kid6",
    "turn_id": "turn-kid6-1",
@@ -480,8 +480,8 @@
   {
    "kind": "subagent.start",
    "visibility": "observed",
-   "id": "f1796632eb044c338890e2abbe6f5352",
-   "time": 1794166301500,
+   "id": "13886f2512454da895165c9bfcb89297",
+   "time": 1794168371382,
    "schema": "siemless.event.v1",
    "session_id": "par6",
    "turn_id": "turn-par6-1",
@@ -507,8 +507,8 @@
   {
    "kind": "content.untrusted",
    "visibility": "observed",
-   "id": "c58b809909154088bbce600b34e3b80b",
-   "time": 1794166301499,
+   "id": "db440c295ed84af48ee055a2c802682b",
+   "time": 1794168371381,
    "schema": "siemless.event.v1",
    "session_id": "par6",
    "turn_id": "turn-par6-1",
@@ -535,8 +535,8 @@
   {
    "kind": "net.egress",
    "visibility": "observed",
-   "id": "ff1b88df989242f68c42689c49c04551",
-   "time": 1794166301499,
+   "id": "2338aae9c3a14c44876b792a097589af",
+   "time": 1794168371381,
    "schema": "siemless.event.v1",
    "session_id": "par6",
    "turn_id": "turn-par6-1",
@@ -565,8 +565,8 @@
   {
    "kind": "tool.call",
    "visibility": "observed",
-   "id": "bbfc522af1ba42f38d8e67eb4f9cb0ef",
-   "time": 1794166301498,
+   "id": "f7fc97aa8a434bee9a678c4c91c73932",
+   "time": 1794168371380,
    "schema": "siemless.event.v1",
    "session_id": "par6",
    "turn_id": "turn-par6-1",
@@ -595,8 +595,8 @@
   {
    "kind": "turn.start",
    "visibility": "observed",
-   "id": "dd321da8340143e5b8f2bb782910969a",
-   "time": 1794166301498,
+   "id": "624ec84c599a40d8ad0277965a212400",
+   "time": 1794168371380,
    "schema": "siemless.event.v1",
    "session_id": "par6",
    "turn_id": "turn-par6-1",

@@ -14,8 +14,8 @@
    "spool_bytes": 0,
    "remote": false,
    "format": "ocsf",
-   "events_path": "/tmp/tmp_dk587_d/events.jsonl",
-   "findings_path": "/tmp/tmp_dk587_d/findings.jsonl",
+   "events_path": "/tmp/tmp4s6acoxq/events.jsonl",
+   "findings_path": "/tmp/tmp4s6acoxq/findings.jsonl",
    "max_mb": 50
   }
  ],

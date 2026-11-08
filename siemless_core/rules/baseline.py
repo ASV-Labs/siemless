@@ -116,7 +116,7 @@ class SecretAccessThenEgress(_Base):
             event, secrets[:5],
             title=f"Sensitive access then egress to {event.host or event.target or 'a destination'}",
             observed=(f"{len(secrets)} sensitive-path access(es) ({', '.join(sorted({t for e in secrets for t in e.tags if t.startswith('sensitive:')})[:4])}) "
-                      f"preceded a {event.action or 'network'} to {event.host or event.target} via {event.tool}."),
+                      f"preceded egress to {event.host or event.target} ({event.action or 'network'} via {event.tool})."),
             why="Credential material was in reach of the agent immediately before it contacted the outside world.",
             recommendation=("Check whether the destination is one you expect for this task; rotate the credentials named in the evidence "
                             "if it is not. Add the destination to allow_hosts if this is a routine deploy."),

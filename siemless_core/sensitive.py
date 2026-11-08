@@ -140,7 +140,19 @@ def paths_in_text(text: str) -> list[str]:
     out: list[str] = []
     for tok in _tokens(text):
         t = tok.strip("'\"`;,()")
-        if not t or t.startswith("-"):
+        if not t:
+            continue
+        # Upload syntax names the file after an "=" or an "@": --data-binary=@/p, -F file=@/p, -d @/p.
+        # Without this one file read twice (read_file, then curl -d @file) looks like two files, and the
+        # "=" forms are missed entirely.
+        if t.startswith("-"):
+            if "=" not in t:
+                continue
+            t = t.split("=", 1)[1]
+        elif "=" in t and not t.startswith(("/", "~", ".", "$HOME", "@")):
+            t = t.split("=", 1)[1]
+        t = t.lstrip("@").strip("'\"")
+        if not t:
             continue
         if t.startswith(("/", "~", "$HOME", "./", "../")) or t.startswith("."):
             out.append(t)

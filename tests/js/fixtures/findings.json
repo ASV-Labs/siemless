@@ -1,9 +1,9 @@
 {
  "findings": [
   {
-   "id": "1fa407a8fdb34dc481186f31beb7e5b1",
-   "time": 1794166301502,
-   "detected_at": 1794166301503,
+   "id": "6e6446648c274008b5b51bc2730f539a",
+   "time": 1794168371384,
+   "detected_at": 1794168371385,
    "schema": "siemless.finding.v1",
    "replay": true,
    "rule_id": "SL-001",
@@ -11,7 +11,7 @@
    "severity": "high",
    "confidence": "medium",
    "title": "[REPLAY] Sensitive access then egress to 127.0.0.1",
-   "observed": "2 sensitive-path access(es) (sensitive:ssh) preceded a exec to 127.0.0.1 via terminal.",
+   "observed": "2 sensitive-path access(es) (sensitive:ssh) preceded egress to 127.0.0.1 (exec via terminal).",
    "why": "Credential material was in reach of the agent immediately before it contacted the outside world.",
    "recommendation": "Check whether the destination is one you expect for this task; rotate the credentials named in the evidence if it is not. Add the destination to allow_hosts if this is a routine deploy.",
    "missing_evidence": [
@@ -63,8 +63,8 @@
    },
    "evidence": [
     {
-     "id": "c7b3b15eda6e4b0ea85e1418457d1349",
-     "time": 1794166301500,
+     "id": "64df10c8c87b47a6b26488c35ea447bc",
+     "time": 1794168371382,
      "kind": "secret.access",
      "visibility": "observed",
      "tool": "read_file",
@@ -77,13 +77,13 @@
      ]
     },
     {
-     "id": "59f709e1a5364a5ea4dba75aa7e82d36",
-     "time": 1794166301502,
+     "id": "f6f8a54d0666458080ecd87305a4860f",
+     "time": 1794168371384,
      "kind": "secret.access",
      "visibility": "inferred",
      "tool": "terminal",
      "action": "exec",
-     "target": "@/Users/demo/siemless-lab/.ssh/id_rsa",
+     "target": "/Users/demo/siemless-lab/.ssh/id_rsa",
      "host": null,
      "tags": [
       "replay",
@@ -92,8 +92,8 @@
      ]
     },
     {
-     "id": "70e5e0cc18d14f7488855f4524426749",
-     "time": 1794166301502,
+     "id": "b8c745f6cc8a483aac76a53538aeb49b",
+     "time": 1794168371384,
      "kind": "net.egress",
      "visibility": "inferred",
      "tool": "terminal",
@@ -116,17 +116,17 @@
    "acked": false
   },
   {
-   "id": "863e3792542048f2a5ba4f1269ef2bd6",
-   "time": 1794166301502,
-   "detected_at": 1794166301503,
+   "id": "bcc48c6fafdf4ef59d77981c982ff0b4",
+   "time": 1794168371384,
+   "detected_at": 1794168371385,
    "schema": "siemless.finding.v1",
    "replay": true,
    "rule_id": "SL-008",
    "rule_name": "Subagent acted outside its parent's scope",
    "severity": "high",
    "confidence": "medium",
-   "title": "[REPLAY] Subagent secret.access outside parent scope: @/Users/demo/siemless-lab/.ssh/id_rsa",
-   "observed": "Child session kid6\u2026 did secret.access (@/Users/demo/siemless-lab/.ssh/id_rsa); its parent did nothing of the kind in the window.",
+   "title": "[REPLAY] Subagent secret.access outside parent scope: /Users/demo/siemless-lab/.ssh/id_rsa",
+   "observed": "Child session kid6\u2026 did secret.access (/Users/demo/siemless-lab/.ssh/id_rsa); its parent did nothing of the kind in the window.",
    "why": "A child agent's goal is a brief from the parent; a sensitive action the parent never took is privilege propagation.",
    "recommendation": "Read the child's goal (subagent.start) and its tool history (subagent.stop) in the evidence.",
    "missing_evidence": [
@@ -143,8 +143,8 @@
    },
    "evidence": [
     {
-     "id": "f1796632eb044c338890e2abbe6f5352",
-     "time": 1794166301500,
+     "id": "13886f2512454da895165c9bfcb89297",
+     "time": 1794168371382,
      "kind": "subagent.start",
      "visibility": "observed",
      "tool": null,
@@ -157,13 +157,13 @@
      ]
     },
     {
-     "id": "59f709e1a5364a5ea4dba75aa7e82d36",
-     "time": 1794166301502,
+     "id": "f6f8a54d0666458080ecd87305a4860f",
+     "time": 1794168371384,
      "kind": "secret.access",
      "visibility": "inferred",
      "tool": "terminal",
      "action": "exec",
-     "target": "@/Users/demo/siemless-lab/.ssh/id_rsa",
+     "target": "/Users/demo/siemless-lab/.ssh/id_rsa",
      "host": null,
      "tags": [
       "replay",
@@ -180,17 +180,17 @@
    "acked": false
   },
   {
-   "id": "5050528f9e74442da8ec77ae3d70a61b",
-   "time": 1794166301502,
-   "detected_at": 1794166301503,
+   "id": "6f71f1ae31fe470782dbd35da65594df",
+   "time": 1794168371384,
+   "detected_at": 1794168371384,
    "schema": "siemless.finding.v1",
    "replay": true,
    "rule_id": "SL-003",
    "rule_name": "Credential discovery",
    "severity": "medium",
    "confidence": "low",
-   "title": "[REPLAY] Credential store targeted: @/Users/demo/siemless-lab/.ssh/id_rsa",
-   "observed": "terminal exec \u2192 @/Users/demo/siemless-lab/.ssh/id_rsa (sensitive:ssh, via:terminal).",
+   "title": "[REPLAY] Credential store targeted: /Users/demo/siemless-lab/.ssh/id_rsa",
+   "observed": "terminal exec \u2192 /Users/demo/siemless-lab/.ssh/id_rsa (sensitive:ssh, via:terminal).",
    "why": "Credential stores are rarely needed for ordinary tasks; each access is worth a glance, and it is the first step of SL-001.",
    "recommendation": "If the task did not require this file, review the turn. Consider terminal.credential_files and Hermes's read denylist for stores the agent should never see.",
    "missing_evidence": [
@@ -219,13 +219,13 @@
    },
    "evidence": [
     {
-     "id": "59f709e1a5364a5ea4dba75aa7e82d36",
-     "time": 1794166301502,
+     "id": "f6f8a54d0666458080ecd87305a4860f",
+     "time": 1794168371384,
      "kind": "secret.access",
      "visibility": "inferred",
      "tool": "terminal",
      "action": "exec",
-     "target": "@/Users/demo/siemless-lab/.ssh/id_rsa",
+     "target": "/Users/demo/siemless-lab/.ssh/id_rsa",
      "host": null,
      "tags": [
       "replay",
@@ -242,9 +242,9 @@
    "acked": false
   },
   {
-   "id": "e8367520ab3b4201b9c2c98ba6fe40c2",
-   "time": 1794166301502,
-   "detected_at": 1794166301503,
+   "id": "4ea34c85672549d5b00e72fd8e416fb0",
+   "time": 1794168371384,
+   "detected_at": 1794168371384,
    "schema": "siemless.finding.v1",
    "replay": true,
    "rule_id": "SL-002",
@@ -252,7 +252,7 @@
    "severity": "high",
    "confidence": "medium",
    "title": "[REPLAY] Untrusted fetch from 127.0.0.1 preceded secret.access",
-   "observed": "1 untrusted-content event(s) (latest: web_extract fetch 127.0.0.1) then secret.access \u2192 @/Users/demo/siemless-lab/.ssh/id_rsa.",
+   "observed": "1 untrusted-content event(s) (latest: web_extract fetch 127.0.0.1) then secret.access \u2192 /Users/demo/siemless-lab/.ssh/id_rsa.",
    "why": "Instructions hidden in fetched content are the usual way an agent is steered into exactly this sequence.",
    "recommendation": "Read the fetched page or file for embedded instructions. If the downstream action was not asked for by the user, treat the source as hostile and review what else happened in this turn.",
    "missing_evidence": [
@@ -282,8 +282,8 @@
    },
    "evidence": [
     {
-     "id": "c58b809909154088bbce600b34e3b80b",
-     "time": 1794166301499,
+     "id": "db440c295ed84af48ee055a2c802682b",
+     "time": 1794168371381,
      "kind": "content.untrusted",
      "visibility": "observed",
      "tool": "web_extract",
@@ -296,13 +296,13 @@
      ]
     },
     {
-     "id": "59f709e1a5364a5ea4dba75aa7e82d36",
-     "time": 1794166301502,
+     "id": "f6f8a54d0666458080ecd87305a4860f",
+     "time": 1794168371384,
      "kind": "secret.access",
      "visibility": "inferred",
      "tool": "terminal",
      "action": "exec",
-     "target": "@/Users/demo/siemless-lab/.ssh/id_rsa",
+     "target": "/Users/demo/siemless-lab/.ssh/id_rsa",
      "host": null,
      "tags": [
       "replay",
@@ -319,9 +319,9 @@
    "acked": false
   },
   {
-   "id": "10a5ccaeb5524456a949dba455627925",
-   "time": 1794166301500,
-   "detected_at": 1794166301501,
+   "id": "4ff437ffdcff4a8cac7df100bc727129",
+   "time": 1794168371382,
+   "detected_at": 1794168371383,
    "schema": "siemless.finding.v1",
    "replay": true,
    "rule_id": "SL-008",
@@ -346,8 +346,8 @@
    },
    "evidence": [
     {
-     "id": "f1796632eb044c338890e2abbe6f5352",
-     "time": 1794166301500,
+     "id": "13886f2512454da895165c9bfcb89297",
+     "time": 1794168371382,
      "kind": "subagent.start",
      "visibility": "observed",
      "tool": null,
@@ -360,8 +360,8 @@
      ]
     },
     {
-     "id": "c7b3b15eda6e4b0ea85e1418457d1349",
-     "time": 1794166301500,
+     "id": "64df10c8c87b47a6b26488c35ea447bc",
+     "time": 1794168371382,
      "kind": "secret.access",
      "visibility": "observed",
      "tool": "read_file",
@@ -382,9 +382,9 @@
    "acked": false
   },
   {
-   "id": "4453c605b12d408996b1bbdae72461ec",
-   "time": 1794166301500,
-   "detected_at": 1794166301501,
+   "id": "b38a538053c64cc796afac68e679531f",
+   "time": 1794168371382,
+   "detected_at": 1794168371383,
    "schema": "siemless.finding.v1",
    "replay": true,
    "rule_id": "SL-003",
@@ -421,8 +421,8 @@
    },
    "evidence": [
     {
-     "id": "c7b3b15eda6e4b0ea85e1418457d1349",
-     "time": 1794166301500,
+     "id": "64df10c8c87b47a6b26488c35ea447bc",
+     "time": 1794168371382,
      "kind": "secret.access",
      "visibility": "observed",
      "tool": "read_file",
@@ -443,9 +443,9 @@
    "acked": false
   },
   {
-   "id": "c95f9dcde05f48d796396012b5e447ba",
-   "time": 1794166301500,
-   "detected_at": 1794166301501,
+   "id": "0784cbe60472450e8f288995152052be",
+   "time": 1794168371382,
+   "detected_at": 1794168371383,
    "schema": "siemless.finding.v1",
    "replay": true,
    "rule_id": "SL-002",
@@ -483,8 +483,8 @@
    },
    "evidence": [
     {
-     "id": "c58b809909154088bbce600b34e3b80b",
-     "time": 1794166301499,
+     "id": "db440c295ed84af48ee055a2c802682b",
+     "time": 1794168371381,
      "kind": "content.untrusted",
      "visibility": "observed",
      "tool": "web_extract",
@@ -497,8 +497,8 @@
      ]
     },
     {
-     "id": "c7b3b15eda6e4b0ea85e1418457d1349",
-     "time": 1794166301500,
+     "id": "64df10c8c87b47a6b26488c35ea447bc",
+     "time": 1794168371382,
      "kind": "secret.access",
      "visibility": "observed",
      "tool": "read_file",
