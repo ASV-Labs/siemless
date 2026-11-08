@@ -35,6 +35,21 @@ hermes plugins install siemless
 | **Desktop** | A SIEMless page: findings with evidence chains, events, exporter health, the ruleset; a status-bar chip; a toast on high/critical. |
 | **CLI** | `/siemless status · findings · show · tail · rules · hosts · ack · test-exporter · replay`, and the same as `hermes siemless …` (`--json`). |
 
+## Where it fits
+
+SIEMless records what the agent did and hands it to the SIEM you already run. It does not scan your
+code, run scanners or block anything, so it sits beside the plugins that do:
+
+| Plugin | Its job | With SIEMless |
+|---|---|---|
+| `hermes-security` (official) | Reviews a repository for vulnerabilities; reports as SARIF, JSON, CSV, Markdown | Reviews code. SIEMless watches the agent that runs it |
+| `airlock`, `tirith`, `canary-trap`, `blackbox`, `hermes-tenuo` | Gate or refuse tool calls | They enforce, SIEMless records. Calls a guard sends to Hermes's approval prompt (airlock, tirith) land as `approval.request` / `approval.response` events |
+| SOC toolkits (e.g. `warden`, `hermes-cyber-au`) | Give the agent defensive tools: scanning, host telemetry, hunts | They make the agent an analyst. SIEMless makes the agent something your analysts can see |
+
+What SIEMless adds: OCSF 1.9 events about the agent itself, ATT&CK-mapped findings with an evidence
+chain, and ready packs for Wazuh, Splunk, Elastic, syslog and CEF, with no binaries to install and no
+network until you turn export on.
+
 ## Sixty seconds
 
 ```
