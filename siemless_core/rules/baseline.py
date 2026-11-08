@@ -12,38 +12,19 @@ from typing import Optional
 from ..events import Event
 from . import Finding, RuleContext
 
-# ATT&CK Enterprise ids used below. Names are checked against docs/RESEARCH.md; a mismatch is a bug.
-T = {
-    "T1552": {"id": "T1552", "name": "Unsecured Credentials"},
-    "T1552.001": {"id": "T1552.001", "name": "Unsecured Credentials: Credentials In Files"},
-    "T1552.004": {"id": "T1552.004", "name": "Unsecured Credentials: Private Keys"},
-    "T1552.007": {"id": "T1552.007", "name": "Unsecured Credentials: Container API"},
-    "T1555": {"id": "T1555", "name": "Credentials from Password Stores"},
-    "T1555.001": {"id": "T1555.001", "name": "Credentials from Password Stores: Keychain"},
-    "T1555.003": {"id": "T1555.003", "name": "Credentials from Password Stores: Credentials from Web Browsers"},
-    "T1567": {"id": "T1567", "name": "Exfiltration Over Web Service"},
-    "T1567.004": {"id": "T1567.004", "name": "Exfiltration Over Web Service: Exfiltration Over Webhook"},
-    "T1048": {"id": "T1048", "name": "Exfiltration Over Alternative Protocol"},
-    "T1041": {"id": "T1041", "name": "Exfiltration Over C2 Channel"},
-    "T1700": {"id": "T1700", "name": "AI-Enabled Exfiltration"},
-    "T1698": {"id": "T1698", "name": "Indirect Prompt Injection"},
-    "T1053": {"id": "T1053", "name": "Scheduled Task/Job"},
-    "T1053.003": {"id": "T1053.003", "name": "Scheduled Task/Job: Cron"},
-    "T1562.001": {"id": "T1562.001", "name": "Impair Defenses: Disable or Modify Tools"},
-    "T1562.002": {"id": "T1562.002", "name": "Impair Defenses: Disable Windows Event Logging"},
-    "T1070": {"id": "T1070", "name": "Indicator Removal"},
-    "T1070.003": {"id": "T1070.003", "name": "Indicator Removal: Clear Command History"},
-    "T1027": {"id": "T1027", "name": "Obfuscated Files or Information"},
-    "T1059": {"id": "T1059", "name": "Command and Scripting Interpreter"},
-    "T1059.004": {"id": "T1059.004", "name": "Command and Scripting Interpreter: Unix Shell"},
-    "T1105": {"id": "T1105", "name": "Ingress Tool Transfer"},
-    "T1071.001": {"id": "T1071.001", "name": "Application Layer Protocol: Web Protocols"},
-    "T1546": {"id": "T1546", "name": "Event Triggered Execution"},
-    "T1546.004": {"id": "T1546.004", "name": "Event Triggered Execution: Unix Shell Configuration Modification"},
-    "T1098.004": {"id": "T1098.004", "name": "Account Manipulation: SSH Authorized Keys"},
-    "T1195": {"id": "T1195", "name": "Supply Chain Compromise"},
-    "T1550": {"id": "T1550", "name": "Use Alternate Authentication Material"},
-}
+from ..attack import technique as _tq
+
+
+class _T(dict):
+    """``T["T1700"]`` → the verified technique record (name, tactic, url) from data/attack.json."""
+
+    def __missing__(self, key):
+        v = _tq(key)
+        self[key] = v
+        return v
+
+
+T = _T()
 
 MIN = 60 * 1000
 
@@ -208,6 +189,8 @@ class CredentialDiscovery(_Base):
         if "sensitive:browser" in tags or "cmd:browser_creds" in tags:
             attack = [T["T1555.003"]]
             sev = "high"
+        if "sensitive:shell_history" in tags:
+            attack = [T["T1552.003"]]
         if "cmd:token_fetch" in tags or "cmd:env_dump" in tags:
             attack = [T["T1552"], T["T1550"]]
             sev = "high"
@@ -402,7 +385,7 @@ class SuspiciousCommand(_Base):
     severity = "high"
     triggers = ("process.exec",)
     attack = [T["T1059.004"], T["T1027"]]
-    attack_note = "T1105 added for download-and-execute; T1070.003 for history clearing; T1546.004 for shell rc edits is covered by SL-010."
+    attack_note = "T1105 for download-and-execute; T1140 for decode-and-run; T1070.003 and T1690 for history tampering; shell rc edits are SL-010."
     false_positives = "Installer one-liners (`curl … | sh`) are common and dangerous in equal measure; the finding says which shape fired."
     required_fields = ("kind", "time", "session_id", "tags", "target")
 
@@ -419,8 +402,10 @@ class SuspiciousCommand(_Base):
         attack = list(self.attack)
         if "cmd:download_exec" in hits:
             attack.append(T["T1105"])
+        if "cmd:decode_exec" in hits or "cmd:hex_obfuscation" in hits:
+            attack.append(T["T1140"])
         if "cmd:antiforensics" in hits:
-            attack.append(T["T1070.003"])
+            attack += [T["T1070.003"], T["T1690"]]
         if "cmd:log_tamper" in hits:
             attack.append(T["T1070"])
         reasons = event.attrs.get("reasons") or []
@@ -443,8 +428,8 @@ class SecurityConfigTamper(_Base):
     description = "Hermes config/.env/hooks/plugins, approval mode, agent instruction files (SOUL.md, AGENTS.md, CLAUDE.md), shell rc files, SSH authorized_keys or OS persistence dirs were written."
     severity = "high"
     triggers = ("config.change",)
-    attack = [T["T1562.001"]]
-    attack_note = "T1546.004 for shell rc files; T1098.004 for authorized_keys."
+    attack = [T["T1685"]]
+    attack_note = "T1685 (Defense Impairment; T1562.001 is revoked in ATT&CK 20) for Hermes config and hooks; T1685.007 when approvals are weakened; T1546.004 for shell rc files; T1098.004 for authorized_keys."
     false_positives = "The user editing their own config through the agent. Approval-mode changes are always reported."
     required_fields = ("kind", "time", "session_id", "target", "tags")
 
@@ -458,7 +443,10 @@ class SecurityConfigTamper(_Base):
             attack = [T["T1546.004"]]
         if "config:ssh_config" in tags:
             attack = [T["T1098.004"]]
-        if "config:approvals" in tags or "config:hermes_config" in tags or "config:hermes_env" in tags or "config:hermes_hooks" in tags:
+        if "config:approvals" in tags:
+            attack = [T["T1685.007"]]  # the agent weakening its own guardrails
+            sev = "high"
+        elif "config:hermes_config" in tags or "config:hermes_env" in tags or "config:hermes_hooks" in tags:
             sev = "high"
         if "config:agent_instructions" in tags:
             sev = "high"
@@ -484,8 +472,8 @@ class RepositoryPublish(_Base):
     description = "git push, a remote change, or a GitHub CLI publish happened in a session that had touched a credential store or a .env file."
     severity = "medium"
     triggers = ("net.egress",)
-    attack = [T["T1567"]]
-    attack_note = "Secret-in-repo leaks are the common case; T1567 fits when the push is the exfiltration channel."
+    attack = [T["T1567.001"]]
+    attack_note = "T1567.001 Exfiltration to Code Repository; secret-in-repo leaks are the common case."
     false_positives = "Normal development after editing .env.example. Allow-list .env.example / templates."
     required_fields = ("kind", "time", "session_id", "tags")
 
@@ -524,7 +512,8 @@ class WebhookTransfer(_Base):
             return None
         taint = ctx.tainted(before=event)
         sev = "high" if taint else "medium"
-        return self._finding(
+        paste = any(p in (event.host or "") for p in ("pastebin", "paste.", "hastebin", "ghostbin", "dpaste", "termbin", "ix.io", "0x0.st", "transfer.sh", "file.io"))
+        f = self._finding(
             event, taint[:1],
             title=f"Webhook/paste destination: {event.host}",
             observed=f"{event.tool} {event.action} → {event.target}" + (" after untrusted content." if taint else "."),
@@ -532,6 +521,9 @@ class WebhookTransfer(_Base):
             recommendation="If you did not set this webhook up, treat it as hostile and look at what was in the request (SL-001 evidence).",
             missing=["Request bodies are not recorded."],
             dedupe=f"{event.session_id}:{event.host}", severity=sev)
+        if paste:
+            f.attack = [T["T1567.003"]]
+        return f
 
 
 # ----------------------------------------------------------------------------------- SL-013

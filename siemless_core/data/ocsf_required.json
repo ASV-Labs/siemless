@@ -1,0 +1,5620 @@
+{
+ "ocsf_version": "1.9.0",
+ "classes": {
+  "1001": {
+   "name": "file_activity",
+   "caption": "File System Activity",
+   "class_uid": 1001,
+   "category_uid": 1,
+   "required": [
+    "activity_id",
+    "actor",
+    "category_uid",
+    "class_uid",
+    "device",
+    "file",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "component",
+    "create_mask",
+    "file_diff",
+    "file_result",
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "device": [
+     "type_id"
+    ],
+    "file": [
+     "name",
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "file_result": [
+     "name",
+     "type_id"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "1002": {
+   "name": "kernel_extension_activity",
+   "caption": "Kernel Extension Activity",
+   "class_uid": 1002,
+   "category_uid": 1,
+   "required": [
+    "activity_id",
+    "actor",
+    "category_uid",
+    "class_uid",
+    "device",
+    "driver",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "device": [
+     "type_id"
+    ],
+    "driver": [
+     "file"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "1003": {
+   "name": "kernel_activity",
+   "caption": "Kernel Activity",
+   "class_uid": 1003,
+   "category_uid": 1,
+   "required": [
+    "activity_id",
+    "actor",
+    "category_uid",
+    "class_uid",
+    "device",
+    "kernel",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "device": [
+     "type_id"
+    ],
+    "kernel": [
+     "name",
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "1004": {
+   "name": "memory_activity",
+   "caption": "Memory Activity",
+   "class_uid": 1004,
+   "category_uid": 1,
+   "required": [
+    "activity_id",
+    "actor",
+    "category_uid",
+    "class_uid",
+    "device",
+    "metadata",
+    "process",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "actual_permissions",
+    "base_address",
+    "message",
+    "observables",
+    "requested_permissions",
+    "size",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "device": [
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "1005": {
+   "name": "module_activity",
+   "caption": "Module Activity",
+   "class_uid": 1005,
+   "category_uid": 1,
+   "required": [
+    "activity_id",
+    "actor",
+    "category_uid",
+    "class_uid",
+    "device",
+    "metadata",
+    "module",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "device": [
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "1006": {
+   "name": "scheduled_job_activity",
+   "caption": "Scheduled Job Activity",
+   "class_uid": 1006,
+   "category_uid": 1,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "device",
+    "job",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "updated_job"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "device": [
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "1007": {
+   "name": "process_activity",
+   "caption": "Process Activity",
+   "class_uid": 1007,
+   "category_uid": 1,
+   "required": [
+    "activity_id",
+    "actor",
+    "category_uid",
+    "class_uid",
+    "device",
+    "metadata",
+    "process",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "actual_permissions",
+    "exit_code",
+    "injection_type",
+    "injection_type_id",
+    "launch_type",
+    "launch_type_id",
+    "message",
+    "module",
+    "observables",
+    "requested_permissions",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "device": [
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "1008": {
+   "name": "event_log_actvity",
+   "caption": "Event Log Activity",
+   "class_uid": 1008,
+   "category_uid": 1,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "actor",
+    "device",
+    "dst_endpoint",
+    "file",
+    "log_name",
+    "log_provider",
+    "log_type",
+    "log_type_id",
+    "message",
+    "observables",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "device": [
+     "type_id"
+    ],
+    "file": [
+     "name",
+     "type_id"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "1009": {
+   "name": "script_activity",
+   "caption": "Script Activity",
+   "class_uid": 1009,
+   "category_uid": 1,
+   "required": [
+    "activity_id",
+    "actor",
+    "category_uid",
+    "class_uid",
+    "device",
+    "metadata",
+    "script",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "device": [
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "script": [
+     "script_content",
+     "type_id"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "1010": {
+   "name": "peripheral_activity",
+   "caption": "Peripheral Activity",
+   "class_uid": 1010,
+   "category_uid": 1,
+   "required": [
+    "activity_id",
+    "actor",
+    "category_uid",
+    "class_uid",
+    "device",
+    "metadata",
+    "peripheral_device",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "device": [
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "peripheral_device": [
+     "name"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "1011": {
+   "name": "device_power_state_activity",
+   "caption": "Device Power State Activity",
+   "class_uid": 1011,
+   "category_uid": 1,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "device",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "device": [
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "1012": {
+   "name": "clipboard_activity",
+   "caption": "Clipboard Activity",
+   "class_uid": 1012,
+   "category_uid": 1,
+   "required": [
+    "activity_id",
+    "actor",
+    "category_uid",
+    "class_uid",
+    "clipboard",
+    "device",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "device": [
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "2001": {
+   "name": "security_finding",
+   "caption": "Security Finding",
+   "class_uid": 2001,
+   "category_uid": 2,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "finding",
+    "metadata",
+    "severity_id",
+    "state_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "analytic",
+    "confidence",
+    "confidence_id",
+    "confidence_score",
+    "impact",
+    "impact_id",
+    "impact_score",
+    "message",
+    "observables",
+    "resources",
+    "risk_level",
+    "risk_level_id",
+    "risk_score",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "finding": [
+     "title",
+     "uid"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "analytic": [
+     "type_id"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "2002": {
+   "name": "vulnerability_finding",
+   "caption": "Vulnerability Finding",
+   "class_uid": 2002,
+   "category_uid": 2,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "finding_info",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid",
+    "vulnerabilities"
+   ],
+   "recommended": [
+    "confidence_id",
+    "message",
+    "observables",
+    "resource",
+    "resources",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ]
+   },
+   "object_required": {
+    "finding_info": [
+     "uid"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "2003": {
+   "name": "compliance_finding",
+   "caption": "Compliance Finding",
+   "class_uid": 2003,
+   "category_uid": 2,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "compliance",
+    "finding_info",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "confidence_id",
+    "message",
+    "observables",
+    "remediation",
+    "resource",
+    "resources",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ]
+   },
+   "object_required": {
+    "finding_info": [
+     "uid"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "remediation": [
+     "desc"
+    ]
+   }
+  },
+  "2004": {
+   "name": "detection_finding",
+   "caption": "Detection Finding",
+   "class_uid": 2004,
+   "category_uid": 2,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "finding_info",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "confidence_id",
+    "evidences",
+    "is_alert",
+    "message",
+    "observables",
+    "resources",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ]
+   },
+   "object_required": {
+    "finding_info": [
+     "uid"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "2005": {
+   "name": "incident_finding",
+   "caption": "Incident Finding",
+   "class_uid": 2005,
+   "category_uid": 2,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "finding_info_list",
+    "metadata",
+    "severity_id",
+    "status_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "confidence_id",
+    "desc",
+    "impact",
+    "impact_id",
+    "impact_score",
+    "message",
+    "observables",
+    "priority_id",
+    "src_url",
+    "status",
+    "status_code",
+    "status_detail",
+    "timezone_offset",
+    "verdict",
+    "verdict_id"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     99
+    ]
+   },
+   "object_required": {
+    "finding_info_list": [
+     "uid"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "2006": {
+   "name": "data_security_finding",
+   "caption": "Data Security Finding",
+   "class_uid": 2006,
+   "category_uid": 2,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "finding_info",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "actor",
+    "confidence_id",
+    "data_security",
+    "database",
+    "databucket",
+    "device",
+    "dst_endpoint",
+    "file",
+    "is_alert",
+    "message",
+    "observables",
+    "resources",
+    "src_endpoint",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "table",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ]
+   },
+   "object_required": {
+    "finding_info": [
+     "uid"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "database": [
+     "type_id"
+    ],
+    "databucket": [
+     "type_id"
+    ],
+    "device": [
+     "type_id"
+    ],
+    "file": [
+     "name",
+     "type_id"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "2007": {
+   "name": "application_security_posture_finding",
+   "caption": "Application Security Posture Finding",
+   "class_uid": 2007,
+   "category_uid": 2,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "finding_info",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "application",
+    "compliance",
+    "confidence_id",
+    "message",
+    "observables",
+    "remediation",
+    "resources",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "vulnerabilities"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ]
+   },
+   "object_required": {
+    "finding_info": [
+     "uid"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "remediation": [
+     "desc"
+    ]
+   }
+  },
+  "2008": {
+   "name": "iam_analysis_finding",
+   "caption": "IAM Analysis Finding",
+   "class_uid": 2008,
+   "category_uid": 2,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "finding_info",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "applications",
+    "confidence_id",
+    "identity_activity_metrics",
+    "message",
+    "observables",
+    "permission_analysis_results",
+    "resources",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "user"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ]
+   },
+   "object_required": {
+    "finding_info": [
+     "uid"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "3001": {
+   "name": "account_change",
+   "caption": "Account Change",
+   "class_uid": 3001,
+   "category_uid": 3,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid",
+    "user"
+   ],
+   "recommended": [
+    "actor",
+    "message",
+    "observables",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "user_result"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "3002": {
+   "name": "authentication",
+   "caption": "Authentication",
+   "class_uid": 3002,
+   "category_uid": 3,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid",
+    "user"
+   ],
+   "recommended": [
+    "account_switch_type",
+    "account_switch_type_id",
+    "actor",
+    "auth_protocol",
+    "auth_protocol_id",
+    "certificate",
+    "dst_endpoint",
+    "is_mfa",
+    "is_remote",
+    "logon_type",
+    "logon_type_id",
+    "message",
+    "observables",
+    "service",
+    "session",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "certificate": [
+     "issuer",
+     "serial_number"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "3003": {
+   "name": "authorize_session",
+   "caption": "Authorize Session",
+   "class_uid": 3003,
+   "category_uid": 3,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid",
+    "user"
+   ],
+   "recommended": [
+    "actor",
+    "group",
+    "groups",
+    "iam_roles",
+    "message",
+    "observables",
+    "privileges",
+    "session",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "3004": {
+   "name": "entity_management",
+   "caption": "Entity Management",
+   "class_uid": 3004,
+   "category_uid": 3,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "entity",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "actor",
+    "comment",
+    "entity_result",
+    "message",
+    "observables",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "updated_entity"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "3005": {
+   "name": "user_access",
+   "caption": "User Access Management",
+   "class_uid": 3005,
+   "category_uid": 3,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid",
+    "user"
+   ],
+   "recommended": [
+    "actor",
+    "iam_role",
+    "message",
+    "observables",
+    "privileges",
+    "resource",
+    "resources",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "3006": {
+   "name": "group_management",
+   "caption": "Group Management",
+   "class_uid": 3006,
+   "category_uid": 3,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "group",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "actor",
+    "iam_roles",
+    "message",
+    "observables",
+    "policies",
+    "privileges",
+    "resource",
+    "resources",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "subgroup",
+    "timezone_offset",
+    "updated_group",
+    "user",
+    "users"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "3007": {
+   "name": "user_management",
+   "caption": "User Management",
+   "class_uid": 3007,
+   "category_uid": 3,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid",
+    "user"
+   ],
+   "recommended": [
+    "actor",
+    "auth_factors",
+    "iam_roles",
+    "message",
+    "observables",
+    "policies",
+    "privileges",
+    "resources",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "updated_user"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "auth_factors": [
+     "factor_type_id"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "3008": {
+   "name": "role_management",
+   "caption": "Role Management",
+   "class_uid": 3008,
+   "category_uid": 3,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "iam_role",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "actor",
+    "message",
+    "observables",
+    "privileges",
+    "programmatic_credentials",
+    "resources",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "updated_role"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "programmatic_credentials": [
+     "uid"
+    ]
+   }
+  },
+  "4001": {
+   "name": "network_activity",
+   "caption": "Network Activity",
+   "class_uid": 4001,
+   "category_uid": 4,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "connection_info",
+    "dst_endpoint",
+    "initiator_id",
+    "is_src_dst_assignment_known",
+    "message",
+    "observables",
+    "proxy",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "traffic",
+    "url"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "connection_info": [
+     "direction_id"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "4002": {
+   "name": "http_activity",
+   "caption": "HTTP Activity",
+   "class_uid": 4002,
+   "category_uid": 4,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "connection_info",
+    "dst_endpoint",
+    "http_cookies",
+    "http_request",
+    "http_response",
+    "http_status",
+    "message",
+    "observables",
+    "proxy",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "traffic"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39,
+     40,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "connection_info": [
+     "direction_id"
+    ],
+    "http_cookies": [
+     "name",
+     "value"
+    ],
+    "http_response": [
+     "code"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "4003": {
+   "name": "dns_activity",
+   "caption": "DNS Activity",
+   "class_uid": 4003,
+   "category_uid": 4,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "answers",
+    "dst_endpoint",
+    "flag_ids",
+    "message",
+    "observables",
+    "opcode_id",
+    "proxy",
+    "query",
+    "query_time",
+    "rcode",
+    "rcode_id",
+    "response_time",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "transaction_id"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     6,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "answers": [
+     "rdata"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "query": [
+     "hostname"
+    ]
+   }
+  },
+  "4004": {
+   "name": "dhcp_activity",
+   "caption": "DHCP Activity",
+   "class_uid": 4004,
+   "category_uid": 4,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "connection_info",
+    "dst_endpoint",
+    "is_renewal",
+    "lease_dur",
+    "message",
+    "observables",
+    "proxy",
+    "relay",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "traffic",
+    "transaction_uid"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "connection_info": [
+     "direction_id"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "4005": {
+   "name": "rdp_activity",
+   "caption": "RDP Activity",
+   "class_uid": 4005,
+   "category_uid": 4,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "certificate_chain",
+    "connection_info",
+    "dst_endpoint",
+    "message",
+    "observables",
+    "protocol_ver",
+    "proxy",
+    "request",
+    "response",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "traffic",
+    "user"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "connection_info": [
+     "direction_id"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "request": [
+     "uid"
+    ]
+   }
+  },
+  "4006": {
+   "name": "smb_activity",
+   "caption": "SMB Activity",
+   "class_uid": 4006,
+   "category_uid": 4,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "client_dialects",
+    "command",
+    "connection_info",
+    "dialect",
+    "dst_endpoint",
+    "file",
+    "message",
+    "observables",
+    "open_type",
+    "proxy",
+    "response",
+    "share",
+    "share_type",
+    "share_type_id",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "traffic",
+    "tree_uid"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "connection_info": [
+     "direction_id"
+    ],
+    "file": [
+     "name",
+     "type_id"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "4007": {
+   "name": "ssh_activity",
+   "caption": "SSH Activity",
+   "class_uid": 4007,
+   "category_uid": 4,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "auth_type",
+    "auth_type_id",
+    "client_hassh",
+    "connection_info",
+    "dst_endpoint",
+    "message",
+    "observables",
+    "protocol_ver",
+    "proxy",
+    "server_hassh",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "traffic"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "client_hassh": [
+     "fingerprint"
+    ],
+    "connection_info": [
+     "direction_id"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "server_hassh": [
+     "fingerprint"
+    ]
+   }
+  },
+  "4008": {
+   "name": "ftp_activity",
+   "caption": "FTP Activity",
+   "class_uid": 4008,
+   "category_uid": 4,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "codes",
+    "command",
+    "command_responses",
+    "connection_info",
+    "dst_endpoint",
+    "message",
+    "name",
+    "observables",
+    "port",
+    "proxy",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "traffic",
+    "type"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "connection_info": [
+     "direction_id"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "4009": {
+   "name": "email_activity",
+   "caption": "Email Activity",
+   "class_uid": 4009,
+   "category_uid": 4,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "direction_id",
+    "email",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "command",
+    "dst_endpoint",
+    "email_auth",
+    "from",
+    "message",
+    "message_trace_uid",
+    "observables",
+    "protocol_name",
+    "smtp_hello",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "to"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "4010": {
+   "name": "network_file_activity",
+   "caption": "Network File Activity",
+   "class_uid": 4010,
+   "category_uid": 4,
+   "required": [
+    "activity_id",
+    "actor",
+    "category_uid",
+    "class_uid",
+    "file",
+    "metadata",
+    "severity_id",
+    "src_endpoint",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "dst_endpoint",
+    "message",
+    "observables",
+    "proxy",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "traffic"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "file": [
+     "name",
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "4011": {
+   "name": "email_file_activity",
+   "caption": "Email File Activity",
+   "class_uid": 4011,
+   "category_uid": 4,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "email_uid",
+    "file",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "file": [
+     "name",
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "4012": {
+   "name": "email_url_activity",
+   "caption": "Email URL Activity",
+   "class_uid": 4012,
+   "category_uid": 4,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "email_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid",
+    "url"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "4013": {
+   "name": "ntp_activity",
+   "caption": "NTP Activity",
+   "class_uid": 4013,
+   "category_uid": 4,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid",
+    "version"
+   ],
+   "recommended": [
+    "connection_info",
+    "delay",
+    "dispersion",
+    "dst_endpoint",
+    "message",
+    "observables",
+    "precision",
+    "proxy",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "stratum",
+    "stratum_id",
+    "timezone_offset",
+    "traffic"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "connection_info": [
+     "direction_id"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "4014": {
+   "name": "tunnel_activity",
+   "caption": "Tunnel Activity",
+   "class_uid": 4014,
+   "category_uid": 4,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "device",
+    "dst_endpoint",
+    "message",
+    "observables",
+    "proxy",
+    "session",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "tunnel_interface",
+    "tunnel_type",
+    "tunnel_type_id",
+    "user"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "device": [
+     "type_id"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "5001": {
+   "name": "inventory_info",
+   "caption": "Device Inventory Info",
+   "class_uid": 5001,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "device",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "device": [
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "5002": {
+   "name": "config_state",
+   "caption": "Device Config State",
+   "class_uid": 5002,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "device",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "cis_benchmark_result",
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "device": [
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "cis_benchmark_result": [
+     "name"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "5003": {
+   "name": "user_inventory",
+   "caption": "User Inventory Info",
+   "class_uid": 5003,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid",
+    "user"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "5004": {
+   "name": "patch_state",
+   "caption": "Operating System Patch State",
+   "class_uid": 5004,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "device",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "kb_article_list",
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "device": [
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "5006": {
+   "name": "kernel_object_query",
+   "caption": "Kernel Object Query",
+   "class_uid": 5006,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "kernel",
+    "metadata",
+    "query_result_id",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "query_info",
+    "query_result",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "kernel": [
+     "name",
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "query_info": [
+     "query_string"
+    ]
+   }
+  },
+  "5007": {
+   "name": "file_query",
+   "caption": "File Query",
+   "class_uid": 5007,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "file",
+    "metadata",
+    "query_result_id",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "query_info",
+    "query_result",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "file": [
+     "name",
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "query_info": [
+     "query_string"
+    ]
+   }
+  },
+  "5008": {
+   "name": "folder_query",
+   "caption": "Folder Query",
+   "class_uid": 5008,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "folder",
+    "metadata",
+    "query_result_id",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "query_info",
+    "query_result",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "folder": [
+     "name",
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "query_info": [
+     "query_string"
+    ]
+   }
+  },
+  "5009": {
+   "name": "admin_group_query",
+   "caption": "Admin Group Query",
+   "class_uid": 5009,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "group",
+    "metadata",
+    "query_result_id",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "query_info",
+    "query_result",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "users"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "query_info": [
+     "query_string"
+    ]
+   }
+  },
+  "5010": {
+   "name": "job_query",
+   "caption": "Job Query",
+   "class_uid": 5010,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "job",
+    "metadata",
+    "query_result_id",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "query_info",
+    "query_result",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "query_info": [
+     "query_string"
+    ]
+   }
+  },
+  "5011": {
+   "name": "module_query",
+   "caption": "Module Query",
+   "class_uid": 5011,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "module",
+    "process",
+    "query_result_id",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "query_info",
+    "query_result",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "query_info": [
+     "query_string"
+    ]
+   }
+  },
+  "5012": {
+   "name": "network_connection_query",
+   "caption": "Network Connection Query",
+   "class_uid": 5012,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "connection_info",
+    "metadata",
+    "process",
+    "query_result_id",
+    "severity_id",
+    "state_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "query_info",
+    "query_result",
+    "state",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "connection_info": [
+     "direction_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "query_info": [
+     "query_string"
+    ]
+   }
+  },
+  "5013": {
+   "name": "networks_query",
+   "caption": "Networks Query",
+   "class_uid": 5013,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "network_interfaces",
+    "query_result_id",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "query_info",
+    "query_result",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "query_info": [
+     "query_string"
+    ]
+   }
+  },
+  "5014": {
+   "name": "peripheral_device_query",
+   "caption": "Peripheral Device Query",
+   "class_uid": 5014,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "peripheral_device",
+    "query_result_id",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "query_info",
+    "query_result",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "peripheral_device": [
+     "name"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "query_info": [
+     "query_string"
+    ]
+   }
+  },
+  "5015": {
+   "name": "process_query",
+   "caption": "Process Query",
+   "class_uid": 5015,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "process",
+    "query_result_id",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "query_info",
+    "query_result",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "query_info": [
+     "query_string"
+    ]
+   }
+  },
+  "5016": {
+   "name": "service_query",
+   "caption": "Service Query",
+   "class_uid": 5016,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "query_result_id",
+    "service",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "query_info",
+    "query_result",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "query_info": [
+     "query_string"
+    ]
+   }
+  },
+  "5017": {
+   "name": "session_query",
+   "caption": "User Session Query",
+   "class_uid": 5017,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "query_result_id",
+    "session",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "query_info",
+    "query_result",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "query_info": [
+     "query_string"
+    ]
+   }
+  },
+  "5018": {
+   "name": "user_query",
+   "caption": "User Query",
+   "class_uid": 5018,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "query_result_id",
+    "severity_id",
+    "time",
+    "type_uid",
+    "user"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "query_info",
+    "query_result",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "query_info": [
+     "query_string"
+    ]
+   }
+  },
+  "5019": {
+   "name": "device_config_state_change",
+   "caption": "Device Config State Change",
+   "class_uid": 5019,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "device",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "prev_security_level",
+    "prev_security_level_id",
+    "prev_security_states",
+    "security_level",
+    "security_level_id",
+    "security_states",
+    "state_id",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "device": [
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "5020": {
+   "name": "software_info",
+   "caption": "Software Inventory Info",
+   "class_uid": 5020,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "device",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "package",
+    "sbom",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "device": [
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "package": [
+     "name",
+     "version"
+    ],
+    "sbom": [
+     "package",
+     "software_components"
+    ]
+   }
+  },
+  "5021": {
+   "name": "osint_inventory_info",
+   "caption": "OSINT Inventory Info",
+   "class_uid": 5021,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "osint",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "osint": [
+     "type_id",
+     "value"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "5022": {
+   "name": "startup_item_query",
+   "caption": "Startup Item Query",
+   "class_uid": 5022,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "query_result_id",
+    "severity_id",
+    "startup_item",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "query_info",
+    "query_result",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "startup_item": [
+     "name",
+     "start_type_id"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "query_info": [
+     "query_string"
+    ]
+   }
+  },
+  "5023": {
+   "name": "cloud_resources_inventory_info",
+   "caption": "Cloud Resources Inventory Info",
+   "class_uid": 5023,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "cloud",
+    "container",
+    "database",
+    "databucket",
+    "idp",
+    "message",
+    "observables",
+    "region",
+    "resources",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "table",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "cloud": [
+     "provider"
+    ],
+    "database": [
+     "type_id"
+    ],
+    "databucket": [
+     "type_id"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "5040": {
+   "name": "evidence_info",
+   "caption": "Live Evidence Info",
+   "class_uid": 5040,
+   "category_uid": 5,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "device",
+    "metadata",
+    "query_evidence",
+    "query_result_id",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "query_info",
+    "query_result",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "device": [
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "query_evidence": [
+     "query_type_id"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "query_info": [
+     "query_string"
+    ]
+   }
+  },
+  "6001": {
+   "name": "web_resources_activity",
+   "caption": "Web Resources Activity",
+   "class_uid": 6001,
+   "category_uid": 6,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid",
+    "web_resources"
+   ],
+   "recommended": [
+    "dst_endpoint",
+    "http_request",
+    "message",
+    "observables",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "updated_web_resources",
+    "web_resources_result"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "6002": {
+   "name": "application_lifecycle",
+   "caption": "Application Lifecycle",
+   "class_uid": 6002,
+   "category_uid": 6,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "application",
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "6003": {
+   "name": "api_activity",
+   "caption": "API Activity",
+   "class_uid": 6003,
+   "category_uid": 6,
+   "required": [
+    "activity_id",
+    "actor",
+    "api",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "src_endpoint",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "dst_endpoint",
+    "http_request",
+    "http_response",
+    "message",
+    "observables",
+    "resources",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "api": [
+     "operation"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "http_response": [
+     "code"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "6004": {
+   "name": "web_resource_access_activity",
+   "caption": "Web Resource Access Activity",
+   "class_uid": 6004,
+   "category_uid": 6,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "http_request",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid",
+    "web_resources"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "src_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "6005": {
+   "name": "datastore_activity",
+   "caption": "Datastore Activity",
+   "class_uid": 6005,
+   "category_uid": 6,
+   "required": [
+    "activity_id",
+    "actor",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "src_endpoint",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "database",
+    "databucket",
+    "dst_endpoint",
+    "http_request",
+    "http_response",
+    "message",
+    "observables",
+    "query_info",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "table",
+    "timezone_offset",
+    "type_id"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "database": [
+     "type_id"
+    ],
+    "databucket": [
+     "type_id"
+    ],
+    "http_response": [
+     "code"
+    ],
+    "observables": [
+     "type_id"
+    ],
+    "query_info": [
+     "query_string"
+    ]
+   }
+  },
+  "6006": {
+   "name": "file_hosting",
+   "caption": "File Hosting Activity",
+   "class_uid": 6006,
+   "category_uid": 6,
+   "required": [
+    "activity_id",
+    "actor",
+    "category_uid",
+    "class_uid",
+    "file",
+    "metadata",
+    "severity_id",
+    "src_endpoint",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "dst_endpoint",
+    "http_request",
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "file": [
+     "name",
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "6007": {
+   "name": "scan_activity",
+   "caption": "Scan Activity",
+   "class_uid": 6007,
+   "category_uid": 6,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "scan",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "command_uid",
+    "duration",
+    "end_time",
+    "message",
+    "num_detections",
+    "num_files",
+    "num_folders",
+    "num_network_items",
+    "num_processes",
+    "num_registry_items",
+    "num_resolutions",
+    "num_skipped_items",
+    "num_trusted_items",
+    "observables",
+    "policy",
+    "schedule_uid",
+    "start_time",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "total"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "scan": [
+     "type_id"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "6008": {
+   "name": "application_error",
+   "caption": "Application Error",
+   "class_uid": 6008,
+   "category_uid": 6,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "7001": {
+   "name": "remediation_activity",
+   "caption": "Remediation Activity",
+   "class_uid": 7001,
+   "category_uid": 7,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "command_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "countermeasures",
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "7002": {
+   "name": "file_remediation_activity",
+   "caption": "File Remediation Activity",
+   "class_uid": 7002,
+   "category_uid": 7,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "command_uid",
+    "file",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "countermeasures",
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ]
+   },
+   "object_required": {
+    "file": [
+     "name",
+     "type_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "7003": {
+   "name": "process_remediation_activity",
+   "caption": "Process Remediation Activity",
+   "class_uid": 7003,
+   "category_uid": 7,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "command_uid",
+    "metadata",
+    "process",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "countermeasures",
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "7004": {
+   "name": "network_remediation_activity",
+   "caption": "Network Remediation Activity",
+   "class_uid": 7004,
+   "category_uid": 7,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "command_uid",
+    "connection_info",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid"
+   ],
+   "recommended": [
+    "countermeasures",
+    "message",
+    "observables",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ]
+   },
+   "object_required": {
+    "connection_info": [
+     "direction_id"
+    ],
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "8001": {
+   "name": "drone_flights_activity",
+   "caption": "Drone Flights Activity",
+   "class_uid": 8001,
+   "category_uid": 8,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "dst_endpoint",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid",
+    "unmanned_aerial_system",
+    "unmanned_system_operator"
+   ],
+   "recommended": [
+    "connection_info",
+    "message",
+    "observables",
+    "proxy_endpoint",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "unmanned_system_operating_area"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "connection_info": [
+     "direction_id"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  },
+  "8002": {
+   "name": "airborne_broadcast_activity",
+   "caption": "Airborne Broadcast Activity",
+   "class_uid": 8002,
+   "category_uid": 8,
+   "required": [
+    "activity_id",
+    "category_uid",
+    "class_uid",
+    "metadata",
+    "severity_id",
+    "time",
+    "type_uid",
+    "unmanned_aerial_system",
+    "unmanned_system_operator"
+   ],
+   "recommended": [
+    "aircraft",
+    "connection_info",
+    "message",
+    "observables",
+    "protocol_name",
+    "proxy_endpoint",
+    "status",
+    "status_code",
+    "status_detail",
+    "status_id",
+    "timezone_offset",
+    "unmanned_system_operating_area"
+   ],
+   "enums": {
+    "activity_id": [
+     0,
+     1,
+     2,
+     99
+    ],
+    "severity_id": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     99
+    ],
+    "status_id": [
+     0,
+     1,
+     2,
+     99
+    ]
+   },
+   "object_required": {
+    "metadata": [
+     "product",
+     "version"
+    ],
+    "connection_info": [
+     "direction_id"
+    ],
+    "observables": [
+     "type_id"
+    ]
+   }
+  }
+ }
+}
