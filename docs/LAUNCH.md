@@ -32,7 +32,7 @@ Detection latency: read it off `/siemless status` on camera; do not state a numb
 ## X post (≤ 280, URLs count as 23)
 
 ```
-SIEMless: agent security telemetry for Hermes. Every tool call, file read, command, request, approval and subagent → OCSF events, 14 correlation rules with ATT&CK, exports to Wazuh/Splunk/Elastic/syslog/CEF. Evidence labelled observed or inferred, never blended.
+SIEMless: agent security telemetry for Hermes. Tool calls, file reads, commands, requests, approvals, subagents → OCSF events; 14 ATT&CK-mapped rules; Wazuh, Splunk, Elastic, syslog, CEF. Evidence labelled observed or inferred.
 
 hermes plugins install siemless
 @NousResearch
