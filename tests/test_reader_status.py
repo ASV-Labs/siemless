@@ -93,7 +93,7 @@ def test_cli_process_is_not_reported_as_the_agent(tmp_path):
     out = io.StringIO()
     try:
         with contextlib.redirect_stdout(out):
-            CMD.cli_handler(argparse.Namespace(words=["status"], json=False), lambda: p)
+            CMD.cli_handler(argparse.Namespace(words=["status"], json=False), pipeline_factory=lambda: p)
     finally:
         p.close()
     assert "events processed" not in out.getvalue() and "events 24h" in out.getvalue()
