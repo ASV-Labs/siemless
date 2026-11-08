@@ -81,3 +81,19 @@ def test_status_text_keeps_live_counters_in_the_agent_process(tmp_path):
         assert "events processed" in text and "queue 0/" in text
     finally:
         reader.close()
+
+
+def test_cli_process_is_not_reported_as_the_agent(tmp_path):
+    import argparse
+    import contextlib
+    import io
+
+    p = PIPE.Pipeline(CFG.load(None), data_dir=tmp_path, worker=True)
+    assert p.live  # a worker thread alone looks live; the CLI still owns no hooks
+    out = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(out):
+            CMD.cli_handler(argparse.Namespace(words=["status"], json=False), lambda: p)
+    finally:
+        p.close()
+    assert "events processed" not in out.getvalue() and "events 24h" in out.getvalue()

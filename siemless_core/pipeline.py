@@ -53,6 +53,7 @@ class Pipeline:
         self.dropped_in = 0
         self.processed = 0
         self.findings_total = 0
+        self.owns_hooks = True  # False in a one-shot CLI process: it has a worker but is not the agent
         self.last_event_at: Optional[int] = None
         self.last_finding_at: Optional[int] = None
         self.started_at = int(time.time() * 1000)
@@ -218,7 +219,7 @@ class Pipeline:
     @property
     def live(self) -> bool:
         """True in the process that owns the hooks; False for a read-only instance over the same store."""
-        return self._thread is not None
+        return self._thread is not None and self.owns_hooks
 
     def status(self) -> dict:
         since_day = int(time.time() * 1000) - 86_400_000

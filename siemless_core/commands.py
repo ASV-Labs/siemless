@@ -203,6 +203,7 @@ def cli_setup(parser: argparse.ArgumentParser) -> None:
 
 def cli_handler(args: argparse.Namespace, *, pipeline_factory: Callable[[], Any]) -> int:
     pipeline = pipeline_factory()
+    pipeline.owns_hooks = False
     words = list(getattr(args, "words", []) or [])
     if getattr(args, "json", False):
         cmd = (words[0] if words else "status").lower()
