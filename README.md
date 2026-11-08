@@ -21,7 +21,8 @@ hermes plugins install siemless
 > Hermes ≥ 0.21.5. Python standard library only; FastAPI (already in Hermes) for the Desktop
 > page's backend. Upstream `hermes plugins validate`: 16/16 checks pass; security scan *caution*
 > (see Disclosure), so the installer asks you to confirm before it installs (`[y/N]`, or `--force`
-> when scripted) — the findings are SIEMless's own detection patterns.
+> when scripted) — the findings are SIEMless's own detection patterns. Before the catalog listing is
+> live, install from the repository: `hermes plugins install ASV-Labs/siemless`.
 
 ## What you get
 
