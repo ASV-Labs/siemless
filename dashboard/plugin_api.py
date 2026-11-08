@@ -34,21 +34,31 @@ def _core():
     return mod
 
 
-_RO = None
+_RO: dict = {}  # one read-mostly pipeline per profile data dir
+_RO_MAX = 16
 
 
 def _pipeline():
     """A read-mostly pipeline over the same store as the agent half (its own process may differ).
 
-    Status and health come from the store, which the agent half keeps current; test-exporter and
-    replay run through this instance's own dispatcher and engine, against the same configuration."""
-    global _RO
-    if _RO is None:
-        _core()
+    Keyed by the *current* profile's data directory: one dashboard process can serve several
+    profiles (Hermes binds each request to its profile's home), and a cached instance must never
+    show one profile's findings to another. Status and health come from the store, which the agent
+    half keeps current; test-exporter and replay run through this instance's own dispatcher and
+    engine, against that profile's configuration."""
+    _core()
+    store_mod = importlib.import_module(f"{_CORE_NAME}.store")
+    data_dir = store_mod.default_data_dir().resolve()
+    key = str(data_dir)
+    p = _RO.get(key)
+    if p is None:
         pipeline_mod = importlib.import_module(f"{_CORE_NAME}.pipeline")
         config_mod = importlib.import_module(f"{_CORE_NAME}.config")
-        _RO = pipeline_mod.Pipeline(config_mod.load(_hermes_ctx()), worker=False)
-    return _RO
+        p = pipeline_mod.Pipeline(config_mod.load(_hermes_ctx()), data_dir=data_dir, worker=False)
+        if len(_RO) >= _RO_MAX:
+            _RO.pop(next(iter(_RO))).close()
+        _RO[key] = p
+    return p
 
 
 def _hermes_ctx():

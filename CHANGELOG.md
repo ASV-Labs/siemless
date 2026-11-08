@@ -41,3 +41,5 @@ First release, built for the Nous Research Hermes Agent Plugin Hackathon.
 - Unknown tools: every path- or URL-shaped string argument is classified, whatever its name (bounded).
 - SL-001 capped at medium for a reply on the agent's own channel (no external host).
 - JSONL lines escape U+2028/U+2029/U+0085 and other `splitlines()` breakers.
+- Dashboard: the cached read pipeline is per profile data directory, so one dashboard process serving several
+  profiles never shows one profile's findings to another (found while reviewing the Mac live test).

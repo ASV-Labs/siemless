@@ -20,13 +20,14 @@ def client(hermes_home, data_dir, monkeypatch):
     api = importlib.util.module_from_spec(spec)
     sys.modules["siemless_dash_api_test"] = api
     spec.loader.exec_module(api)
-    api._RO = None
+    api._RO.clear()
     app = FastAPI()
     app.include_router(api.router, prefix="/api/plugins/siemless")
     c = TestClient(app)
     yield c, api
-    if api._RO is not None:
-        api._RO.close()
+    for p in api._RO.values():
+        p.close()
+    api._RO.clear()
 
 
 def _seed(api):
@@ -64,3 +65,16 @@ def test_replay_is_confined_to_demo_or_data_dir(client, tmp_path):
     outside.write_text('{"hook":"post_tool_call","payload":{}}\n')
     assert c.post("/api/plugins/siemless/replay", json={"path": str(outside)}).status_code == 400
     assert c.get("/api/plugins/siemless/finding?id=nope").status_code == 404
+
+
+def test_dashboard_never_serves_one_profiles_store_to_another(client, tmp_path, monkeypatch):
+    """One dashboard process can serve several profiles; the cached pipeline is per data dir."""
+    c, api = client
+    a = api._pipeline()
+    s = Session()
+    run(a, s.tool("read_file", {"path": "/Users/c/.ssh/id_rsa"}), s.tool("web_extract", {"url": "https://evil.example.org/c"}))
+    assert c.get("/api/plugins/siemless/findings").json()["findings"]
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "other-profile"))
+    b = api._pipeline()
+    assert b is not a and b.store.path != a.store.path
+    assert c.get("/api/plugins/siemless/findings").json()["findings"] == []
