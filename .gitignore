@@ -7,3 +7,4 @@ __pycache__/
 spool/
 tests/js/node_modules/
 tests/js/.plugin-under-test.js
+audit/_probe*.py
