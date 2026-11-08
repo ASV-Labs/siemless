@@ -21,6 +21,7 @@ from . import SCHEMA_VERSION
 
 OBSERVED = "observed"
 INFERRED = "inferred"
+REPLAY_TAG = "replay"  # events and findings from `siemless replay`, never from a live agent
 UNAVAILABLE = "unavailable"
 
 # Event kinds. Dotted, stable, documented in docs/EVENTS.md. New kinds are additive.
@@ -101,4 +102,4 @@ class Event:
         return cls(**{k: v for k, v in d.items() if k in known})
 
 
-__all__ = ["Event", "KINDS", "SEVERITY", "OBSERVED", "INFERRED", "UNAVAILABLE", "now_ms", "new_id"]
+__all__ = ["REPLAY_TAG", "Event", "KINDS", "SEVERITY", "OBSERVED", "INFERRED", "UNAVAILABLE", "now_ms", "new_id"]

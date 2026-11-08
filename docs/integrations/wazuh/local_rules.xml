@@ -25,23 +25,7 @@
     <description>SIEMless finding $(unmapped.siemless.rule_id): $(finding_info.title)</description>
     <group>siemless_finding,</group>
   </rule>
-  <rule id="100511" level="7">
-    <if_sid>100510</if_sid>
-    <field name="severity_id">^3$</field>
-    <description>SIEMless medium finding $(unmapped.siemless.rule_id): $(finding_info.title)</description>
-  </rule>
-  <rule id="100512" level="10">
-    <if_sid>100510</if_sid>
-    <field name="severity_id">^4$</field>
-    <description>SIEMless HIGH finding $(unmapped.siemless.rule_id): $(finding_info.title) [session $(metadata.correlation_uid)]</description>
-  </rule>
-  <rule id="100513" level="13">
-    <if_sid>100510</if_sid>
-    <field name="severity_id">^5$</field>
-    <description>SIEMless CRITICAL finding $(unmapped.siemless.rule_id): $(finding_info.title) [session $(metadata.correlation_uid)]</description>
-  </rule>
-
-  <!-- Named findings, so dashboards and MITRE views line up. -->
+  <!-- Named findings first, so dashboards and MITRE views line up (see the ordering note below). -->
   <rule id="100520" level="12">
     <if_sid>100510</if_sid>
     <field name="unmapped.siemless.rule_id">^SL-001$</field>
@@ -93,6 +77,25 @@
     <field name="unmapped.siemless.rule_id">^SL-012$</field>
     <description>SIEMless SL-012: data sent to a webhook or paste service</description>
     <mitre><id>T1567.004</id></mitre>
+  </rule>
+
+  <!-- Severity fallbacks for findings without a named entry above (SL-004/006/007/011/013/014).
+       Wazuh tests sibling children in file order and the first match wins, so these come AFTER the
+       named rules: an SL-001 keeps its own id, level and MITRE tags whatever its severity. -->
+  <rule id="100511" level="7">
+    <if_sid>100510</if_sid>
+    <field name="severity_id">^3$</field>
+    <description>SIEMless medium finding $(unmapped.siemless.rule_id): $(finding_info.title)</description>
+  </rule>
+  <rule id="100512" level="10">
+    <if_sid>100510</if_sid>
+    <field name="severity_id">^4$</field>
+    <description>SIEMless HIGH finding $(unmapped.siemless.rule_id): $(finding_info.title) [session $(metadata.correlation_uid)]</description>
+  </rule>
+  <rule id="100513" level="13">
+    <if_sid>100510</if_sid>
+    <field name="severity_id">^5$</field>
+    <description>SIEMless CRITICAL finding $(unmapped.siemless.rule_id): $(finding_info.title) [session $(metadata.correlation_uid)]</description>
   </rule>
 
   <!-- Raw events worth their own alert even without a finding. -->

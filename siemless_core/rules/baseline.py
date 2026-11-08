@@ -148,6 +148,10 @@ class InjectionChain(_Base):
         if not taint:
             return None
         sev = "high" if event.kind in ("secret.access", "config.change", "plugin.change") else "medium"
+        marked = [t for t in taint if "untrusted:injection_markers" in t.tags]
+        if marked:
+            taint = marked + [t for t in taint if t not in marked]
+            sev = "critical" if sev == "high" else "high"
         src = taint[0]
         return self._finding(
             event, taint[:3],
@@ -192,7 +196,7 @@ class CredentialDiscovery(_Base):
         if "sensitive:shell_history" in tags:
             attack = [T["T1552.003"]]
         if "cmd:token_fetch" in tags or "cmd:env_dump" in tags:
-            attack = [T["T1552"], T["T1550"]]
+            attack = [T["T1552"], T["T1528"]]  # T1528 Steal Application Access Token (credential-access)
             sev = "high"
         if "sensitive:cloud" in tags or "sensitive:hermes_secrets" in tags or "sensitive:dotenv" in tags:
             sev = max(sev, "medium", key=["low", "medium", "high"].index)
@@ -452,12 +456,18 @@ class SecurityConfigTamper(_Base):
             sev = "high"
         if "config:agent_instructions" in tags:
             sev = "high"
+        if "config:siemless" in tags:
+            sev = "critical" if "cmd:telemetry_tamper" in tags else "high"  # the detector itself was changed
         taint = ctx.tainted(before=event)
-        if taint:
-            sev = "critical" if sev == "high" else "high"
+        marked = [t for t in taint if "untrusted:injection_markers" in t.tags]
+        if marked:
+            sev = "critical" if sev == "high" else "high"  # the content addressed the agent, then this changed
+            taint = marked + [t for t in taint if t not in marked]
+        elif taint:
+            sev = "high"  # fetched docs then a config edit is also what ordinary research looks like
         f = self._finding(
             event, taint[:2],
-            title=f"Governance change: {event.target}",
+            title=(f"SIEMless itself was changed: {event.target}" if "config:siemless" in tags else f"Governance change: {event.target}"),
             observed=f"{event.tool or 'command'} {event.action} → {event.target} ({', '.join(sorted(t for t in tags if t.startswith('config:')))})" + (" after untrusted content." if taint else "."),
             why="These files decide what the agent is allowed to do and what it believes it is; changing them is how a compromise persists.",
             recommendation="Diff the file. If approvals were weakened, restore them before the next turn runs.",
@@ -575,7 +585,11 @@ class HermesHomeAccess(_Base):
     def evaluate(self, event: Event, ctx: RuleContext) -> Optional[Finding]:
         tgt = event.target or ""
         hermes_secret = "sensitive:hermes_secrets" in event.tags
-        other_profile = "/.hermes/profiles/" in tgt and event.kind in ("file.read", "file.write")
+        other_profile = False
+        if "/.hermes/profiles/" in tgt and event.kind in ("file.read", "file.write"):
+            name = tgt.split("/.hermes/profiles/", 1)[1].split("/", 1)[0]
+            mine = event.profile or ctx.state.profile or "default"
+            other_profile = bool(name) and name != mine
         if not (hermes_secret or other_profile):
             return None
         return self._finding(

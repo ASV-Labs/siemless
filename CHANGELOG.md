@@ -14,3 +14,20 @@ First release, built for the Nous Research Hermes Agent Plugin Hackathon.
 - `/siemless` slash command and `hermes siemless` CLI incl. `replay`.
 - Packs: Wazuh rules, Splunk guide, Elastic template, 22 generated Sigma rules (2 correlations), Summit contract.
 - Demo lab with eight recorded variants and a local receiver.
+
+### Hardened after independent audit round 1 (audit/round1.md: 5 high, 14 medium, 9 low — all fixed)
+
+- Redaction: CLI credential flags, more vendor prefixes, webhook paths, PEM of any length, quoted KV values, argument
+  names, free-text fields; redaction before any cut; one shared budget for strings, dicts and lists. 23 canaries.
+- Coverage: tools without a dedicated collector (MCP, other plugins), globs, `..` paths, interpreter sockets,
+  `$(curl …)`, `crontab <file>`, quote/backslash obfuscation, trailing-dot and numeric hosts; bounded `subagent_stop`.
+- Tamper: writes to SIEMless's own data, `hermes siemless ack|replay`, and `plugins.entries.siemless` edits are SL-010
+  "SIEMless itself was changed" (critical for deletes/sqlite edits); ack and replay leave audit events.
+- Replay: tagged `replay` in every format, `[REPLAY]` titles, separate correlation namespace, never sent remote.
+- Rules: injection-marker scan of fetched content (names only) gates *critical*; escalations are never masked by the
+  cooldown; own profile is not "another profile"; `allow_paths` normalised and segment-bounded; salient-event ring
+  so floods cannot evict a secret read; out-of-order events no longer hide in-window ones; T1528 for token fetches.
+- Delivery: refusals spool and retry on the long backoff; Elastic `_id` = event id and per-item error handling;
+  redirects never followed; spool records are one line whatever the content; lazy token resolution.
+- Store: retention runs on busy agents; `hosts_seen` pruned; Wazuh named rules ordered before severity fallbacks;
+  Sigma correlations group by session; demo receiver hardened and logs outside the plugin tree.

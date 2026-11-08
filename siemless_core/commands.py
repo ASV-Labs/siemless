@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 
 from . import __version__
-from .events import Event, now_ms
+from .events import Event
 
 HELP = """siemless {v} — agent security telemetry
   /siemless status                 pipeline, queue and exporter health
@@ -145,6 +145,7 @@ def dispatch(pipeline, args: list[str], *, cwd: Optional[str] = None) -> str:
         if not f:
             return f"no finding matching {rest[0]!r}"
         store.ack_finding(f["id"], True)
+        _audit(pipeline, "ack", f"{f['rule_id']} {f['id']}")
         return f"acknowledged {f['rule_id']} {f['title']}"
     if cmd == "test-exporter":
         ev = Event(kind="siemless.health", visibility="observed", severity="info", target="test-exporter",
@@ -159,10 +160,22 @@ def dispatch(pipeline, args: list[str], *, cwd: Optional[str] = None) -> str:
             p = Path(cwd) / p
         if not p.exists():
             return f"no such fixture: {p}"
+        _audit(pipeline, "replay", str(p)[-200:])
         r = replay(pipeline, p)
         head = f"replayed {r['records']} records in {r['elapsed_ms']} ms → {len(r['findings'])} finding(s)  [REPLAY, not live]"
         return head + ("\n" + findings_text(r["findings"]) if r["findings"] else "")
     return HELP.format(v=__version__)
+
+
+def _audit(pipeline, action: str, target: str) -> None:
+    """Every ack and replay leaves an audit event in the store and the export stream, whoever ran it:
+    the agent can reach this CLI through its terminal, so these are never silent."""
+    try:
+        ev = Event(kind="command", visibility="observed", severity="low", action=f"siemless_{action}", target=target,
+                   tags=["siemless:audit", f"siemless:{action}"], profile=pipeline.profile)
+        pipeline.process_event(ev)
+    except Exception:
+        pass
 
 
 def _find(store, ref: str) -> Optional[dict]:

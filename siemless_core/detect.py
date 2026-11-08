@@ -9,7 +9,6 @@ Suppression happens here, in three layers, all configurable:
 
 from __future__ import annotations
 
-import time
 from collections import OrderedDict
 from typing import Optional
 
@@ -17,6 +16,9 @@ from . import PRODUCT, VENDOR, __version__
 from .correlate import Correlator, SessionState
 from .events import Event, now_ms
 from .rules import Finding, RuleContext, all_rules
+
+
+_SEV_RANK = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
 
 
 class Engine:
@@ -28,7 +30,7 @@ class Engine:
         for r in self.rules:
             for k in r.triggers:
                 self._by_trigger.setdefault(k, []).append(r)
-        self._recent: OrderedDict[str, int] = OrderedDict()
+        self._recent: OrderedDict[str, tuple[int, int]] = OrderedDict()
         self.cooldown_ms = int(float(self.config.get("finding_cooldown_s", 600)) * 1000)
         self.evaluations = 0
         self.suppressed = 0
@@ -54,11 +56,14 @@ class Engine:
         return out
 
     def _suppressed(self, f: Finding, when: int) -> bool:
+        """Same rule + dedupe key inside the cooldown is one finding, unless the new one is more severe:
+        an escalation (a small owner message, then a 5 kB one to a stranger) is never masked."""
         key = f"{f.rule_id}|{f.dedupe_key}"
+        rank = _SEV_RANK.get(f.severity, 0)
         last = self._recent.get(key)
-        if last is not None and when - last < self.cooldown_ms:
+        if last is not None and when - last[0] < self.cooldown_ms and rank <= last[1]:
             return True
-        self._recent[key] = when
+        self._recent[key] = (when, rank)
         self._recent.move_to_end(key)
         while len(self._recent) > 4096:
             self._recent.popitem(last=False)
@@ -72,7 +77,7 @@ class Engine:
             {"id": rid, "enabled": False} for rid in (self.config.get("disable_rules") or [])]
 
 
-def finding_to_dict(f: Finding, *, profile: Optional[str] = None) -> dict:
+def finding_to_dict(f: Finding, *, profile: Optional[str] = None, replay: bool = False) -> dict:
     """The stored / exported form of a finding. Evidence is summarised; full events are in the store."""
     conf = f.confidence()
     vis = f.visibility_summary()
@@ -81,11 +86,12 @@ def finding_to_dict(f: Finding, *, profile: Optional[str] = None) -> dict:
         "time": f.evidence[-1].time if f.evidence else now_ms(),
         "detected_at": now_ms(),
         "schema": "siemless.finding.v1",
+        "replay": bool(replay),
         "rule_id": f.rule_id,
         "rule_name": f.name,
         "severity": f.severity,
         "confidence": conf,
-        "title": f.title,
+        "title": ("[REPLAY] " + f.title) if replay else f.title,
         "observed": f.observed,
         "why": f.why,
         "recommendation": f.recommendation,
@@ -107,8 +113,9 @@ def finding_event(fd: dict) -> Event:
     return Event(kind="finding", visibility="observed", id="f-" + fd["id"], time=fd["time"], session_id=fd.get("session_id"),
                  turn_id=fd.get("turn_id"), profile=fd.get("profile"), severity=fd["severity"], target=fd["title"],
                  rule_ids=[fd["rule_id"]], evidence=[e["id"] for e in fd["evidence"]],
-                 attrs={"confidence": fd["confidence"], "attack": [a["id"] for a in fd["attack"]], "finding_id": fd["id"]},
-                 tags=["finding"])
+                 attrs={"confidence": fd["confidence"], "attack": [a["id"] for a in fd["attack"]], "finding_id": fd["id"],
+                        **({"replay": True} if fd.get("replay") else {})},
+                 tags=(["replay", "finding"] if fd.get("replay") else ["finding"]))
 
 
 __all__ = ["Engine", "finding_to_dict", "finding_event"]

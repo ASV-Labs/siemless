@@ -10,6 +10,8 @@ The agent thread only does ``offer()``: a non-blocking put on a bounded queue. E
   replayed first, in order.
 * **Delivery is at-least-once per destination**, not exactly-once: a batch that was written but
   whose acknowledgement was lost is sent again. Every event carries its id, so receivers dedupe.
+* **A refused destination (401/403) is not abandoned**: its events spool and it is retried every
+  ``BACKOFF_MAX_S``; health says ``refused`` with the reason until a send succeeds.
 * **Best-effort only when the spool is full or the process dies with a non-empty queue**: those
   events are lost and the loss is visible in ``dropped``.
 """
@@ -66,7 +68,8 @@ class _Slot:
 
     # ------------------------------------------------------------ spool
     def spool_batch(self, batch: list[Event]) -> None:
-        lines = [json.dumps(e.to_dict(), separators=(",", ":"), ensure_ascii=False) for e in batch]
+        # ensure_ascii: U+2028/U+0085 etc. stay escaped, so a record is always exactly one "\n"-terminated line.
+        lines = [json.dumps(e.to_dict(), separators=(",", ":"), ensure_ascii=True) for e in batch]
         incoming = sum(len(l) + 1 for l in lines)
         if self._spool_size() + incoming > self.spool_max:
             self.dropped += len(batch)
@@ -84,7 +87,7 @@ class _Slot:
             return True
         try:
             with open(self.spool, "r", encoding="utf-8") as fh:
-                lines = fh.read().splitlines()
+                lines = [l for l in fh.read().split("\n") if l.strip()]
         except OSError:
             return True
         batch: list[Event] = []
@@ -214,13 +217,17 @@ class Dispatcher:
         now = time.monotonic()
         with self._lock:
             slots = list(self.slots.values())
+        local_batch = batch
         for slot in slots:
             if not slot.enabled or slot.state in ("needs_consent", "disabled"):
                 continue
-            if slot.state == "refused":
-                slot.dropped += len(batch)
-                slot.dirty = True
-                continue
+            batch = local_batch
+            if slot.exporter.remote:
+                # Replayed recordings never leave the machine: a fixture is not evidence about a live agent,
+                # and remote consent was given for the agent's telemetry, not for files someone fed in.
+                batch = [e for e in local_batch if "replay" not in e.tags]
+                if not batch:
+                    continue
             if now < slot.next_retry:
                 slot.spool_batch(batch)
                 continue
@@ -230,11 +237,16 @@ class Dispatcher:
                     raise ExportError("spool not fully drained")
                 slot.exporter.send(batch)
             except ExportRefused as exc:
+                # The destination rejected us (401/403/400): usually a token or index problem the owner fixes.
+                # Keep the events in the bounded spool and retry on the long backoff rather than dropping
+                # everything forever; the state stays "refused" until a send succeeds.
                 slot.state = "refused"
+                slot.failures += 1
                 slot.failed += 1
                 slot.last_error = str(exc)[:300]
                 slot.last_error_at = int(time.time() * 1000)
-                slot.dropped += len(batch)
+                slot.next_retry = time.monotonic() + BACKOFF_MAX_S
+                slot.spool_batch(batch)
                 slot.dirty = True
                 continue
             except ExportError as exc:

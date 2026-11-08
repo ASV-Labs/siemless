@@ -4,7 +4,6 @@ hook→finding latency on the worker. Run: python tests/bench.py"""
 from __future__ import annotations
 
 import importlib.util
-import statistics
 import sys
 import tempfile
 import time

@@ -165,6 +165,8 @@ def _flat_unmapped(e: Event) -> dict:
             out["args_json"] = json.dumps(v, separators=(",", ":"), ensure_ascii=False)[:4000]
     if e.attrs.get("attack"):
         out["attack_ids"] = ",".join(e.attrs["attack"])
+    if "replay" in e.tags:
+        out["replay"] = True  # replayed recording, not live telemetry
     return out
 
 
@@ -327,7 +329,7 @@ def to_ecs(e: Event, *, hostname: Optional[str] = None) -> dict:
         },
         "observer": {"vendor": VENDOR, "product": PRODUCT, "version": __version__, "type": "agent-telemetry"},
         "agent": {"name": "hermes-agent", "type": "ai-agent", "id": e.profile or "default"},
-        "labels": {"visibility": e.visibility, "kind": e.kind},
+        "labels": {"visibility": e.visibility, "kind": e.kind, **({"replay": "true"} if "replay" in e.tags else {})},
         "tags": list(e.tags),
         "siemless": {k: v for k, v in e.to_dict().items() if k not in ("id", "time", "schema", "tags")},
     }
@@ -383,6 +385,9 @@ def to_cef(e: Event) -> str:
                            "cs5Label": "tool", "cs5": e.tool or "", "externalId": e.id}
     if e.host:
         ext["dhost"] = e.host
+    if "replay" in e.tags:
+        ext["flexString1Label"] = "mode"
+        ext["flexString1"] = "replay"
     if e.kind in ("file.read", "file.write", "secret.access") and e.target:
         ext["filePath"] = e.target
     if e.kind == "process.exec" and e.target:
@@ -396,8 +401,9 @@ def to_cef(e: Event) -> str:
         if e.attrs.get("attack"):
             ext["cs6Label"] = "attack"
             ext["cs6"] = ",".join(e.attrs["attack"])
-    header = "|".join(["CEF:0", _cef_header(VENDOR), _cef_header(PRODUCT), _cef_header(__version__), _cef_header(sig),
-                       _cef_header(name)[:200], str(_CEF_SEV.get(e.severity, 1))])
+    # Truncate *before* escaping: cutting an escaped string can leave a lone "\" that escapes the next "|".
+    header = "|".join(["CEF:0", _cef_header(VENDOR), _cef_header(PRODUCT), _cef_header(__version__), _cef_header(str(sig)[:100]),
+                       _cef_header(str(name or "")[:200]), str(_CEF_SEV.get(e.severity, 1))])
     return header + "|" + " ".join(f"{k}={_cef_ext(v)}" for k, v in ext.items() if v != "" and v is not None)
 
 
@@ -426,6 +432,8 @@ def to_syslog(e: Event, msg: str, *, hostname: Optional[str] = None, app: str = 
         sd_params["turn"] = e.turn_id
     if e.rule_ids:
         sd_params["rule"] = e.rule_ids[0]
+    if "replay" in e.tags:
+        sd_params["replay"] = "true"
     sd = f"[{SD_ID} " + " ".join(f'{k}="{_sd_escape(v)}"' for k, v in sd_params.items()) + "]"
     body = msg if msg.isascii() else BOM + msg
     return f"<{pri}>1 {_iso(e.time)} {host} {app} - {msgid} {sd} {body}"

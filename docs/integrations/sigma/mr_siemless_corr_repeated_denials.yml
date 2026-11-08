@@ -10,7 +10,7 @@ correlation:
     rules:
     - siemless_raw_approval_denied
     group-by:
-    - metadata.correlation_uid
+    - actor.session.uid
     timespan: 5m
     condition:
         gte: 3

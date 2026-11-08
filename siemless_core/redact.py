@@ -41,6 +41,23 @@ _PREFIXES = [
     "sb" + "p_",
     "shp" + "at_",
     "sq0" + "atp-",
+    "sk" + "_live_",   # Stripe secret / restricted keys (underscore, unlike OpenAI's hyphen)
+    "sk" + "_test_",
+    "rk" + "_live_",
+    "rk" + "_test_",
+    "AS" + "IA",       # AWS STS temporary access key id
+    "SG" + ".",        # SendGrid
+    "dop" + "_v1_",    # DigitalOcean personal / OAuth / refresh tokens
+    "doo" + "_v1_",
+    "dor" + "_v1_",
+    "gl" + "sa_",      # Grafana service account
+    "gl" + "c_",       # Grafana cloud
+    "lin" + "_api_",   # Linear
+    "xa" + "pp-",      # Slack app-level token
+    "AGE-SECRET" + "-KEY-",
+    "ATAT" + "T3",     # Atlassian API token
+    "nf" + "p_",       # Netlify
+    "pn" + "u_",       # Pulumi
     "ey" + "J",  # JWT header start (base64 of '{"')
 ]
 
@@ -52,17 +69,34 @@ _PREFIX_RE = re.compile(
 
 # key = value / key: value / "key": "value" with a credential-looking key name.
 _KV_RE = re.compile(
-    r"(?i)(\b(?:api[_-]?key|access[_-]?key|secret[_-]?key|client[_-]?secret|private[_-]?key|"
+    r"(?i)(\b(?:api[_-]?key|access[_-]?key|secret[_-]?key|client[_-]?secret|private[_-]?key(?:[_-]?id)?|"
     r"auth[_-]?token|access[_-]?token|refresh[_-]?token|id[_-]?token|session[_-]?token|"
     r"token|secret|password|passwd|pwd|credential|authorization|cookie|set-cookie)"
-    r"[\"']?\s*[:=]\s*[\"']?)([^\s\"',;&]{6,})"
+    r"[\"']?\s*[:=]\s*)(\"[^\"\n]+\"|'[^'\n]+'|[^\s\"',;&]{6,})"
 )
 
 _BEARER_RE = re.compile(r"(?i)\b(bearer|basic|token)\s+([A-Za-z0-9_\-./+=]{12,})")
+# A key block is masked to its END marker, or to the end of the text when the END marker was cut off.
 _PEM_RE = re.compile(
-    r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----",
+    r"-----BEGIN [A-Z ]*PRIVATE KEY(?: BLOCK)?-----.*?(?:-----END [A-Z ]*PRIVATE KEY(?: BLOCK)?-----|\Z)",
     re.DOTALL,
 )
+
+# Credentials passed as command-line flags.
+#   curl -u user:pass / --user user:pass / --proxy-user u:p
+_CLI_USERPASS_RE = re.compile(r"((?:^|\s)(?:-u|--user|--proxy-user|-U)(?:\s+|=)?(['\"]?)[^\s:'\"]*:)([^\s'\"]+)(\2)")
+#   --password X, --password=X, --api-key X, --token=X, --client-secret X, --auth-token X ...
+_CLI_SECRET_FLAG_RE = re.compile(
+    r"(?i)((?:^|\s)--?[a-z0-9-]*(?:password|passwd|passphrase|token|secret|api-?key|access-?key|private-?key|credentials?)"
+    r"[a-z0-9-]*(?:\s+|=))(['\"]?)((?!-)[^\s'\"]+)(\2)")
+#   mysql -uroot -pPASS (password glued to -p), sshpass -p PASS
+_MYSQL_P_RE = re.compile(r"(\b(?:mysql|mysqldump|mysqladmin|mysqlsh|mariadb|mariadb-dump|mysqlimport)\b[^|;&\n]*?\s-p)(['\"]?)([^\s'\"]+)(\2)")
+_SSHPASS_RE = re.compile(r"(\bsshpass\s+-p\s*)(['\"]?)([^\s'\"]+)(\2)")
+# Webhook URLs carry their credential in the path.
+_WEBHOOK_PATH_RE = re.compile(
+    r"(?i)((?:hooks\.slack\.com/(?:services|workflows|triggers)/)|"
+    r"(?:(?:discord(?:app)?\.com|ptb\.discord\.com|canary\.discord\.com)/api/(?:v\d+/)?webhooks/\d+/)|"
+    r"(?:\.webhook\.office\.com/webhookb2/)|(?:/hooks/[a-z0-9]{0,8}/?))([A-Za-z0-9_\-/@.]{8,})")
 # user:password@ (or :password@ with no user) in any scheme (https, postgres, redis, amqp, ftp, …)
 _URL_CRED_RE = re.compile(r"(?i)\b([a-z][a-z0-9+.-]*://)([^/\s:@]*):([^/\s@]+)@")
 # Query parameters whose *name* says credential. Names are split into words (``X-Amz-Signature`` →
@@ -125,17 +159,28 @@ def is_secret_arg_name(name: str) -> bool:
     return k in _SECRET_ARG_EXACT or any(part in k for part in _SECRET_ARG_PARTS)
 
 
+def _kv_sub(m: re.Match) -> str:
+    v = m.group(2)
+    q = v[0] if v[:1] in ("\"", "'") else ""
+    return f"{m.group(1)}{q}{MASK}{q}"
+
+
 def redact_text(text: str) -> str:
     """Return *text* with credential-shaped substrings masked."""
     if not text:
         return text
     out = _PEM_RE.sub(MASK, text)
     out = _URL_CRED_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}:{MASK}@", out)
+    out = _WEBHOOK_PATH_RE.sub(lambda m: f"{m.group(1)}{MASK}", out)
+    out = _CLI_USERPASS_RE.sub(lambda m: f"{m.group(1)}{MASK}{m.group(4)}", out)
+    out = _MYSQL_P_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}{MASK}{m.group(4)}", out)
+    out = _SSHPASS_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}{MASK}{m.group(4)}", out)
+    out = _CLI_SECRET_FLAG_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}{MASK}{m.group(4)}", out)
     out = mask_query_secrets(out, MASK)
     out = _PATH_TOKEN_RE.sub(lambda m: f"{m.group(1) or ''}{MASK}", out)
     out = _ENV_ASSIGN_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}{MASK}{m.group(4)}", out)
     out = _BEARER_RE.sub(lambda m: f"{m.group(1)} {MASK}", out)
-    out = _KV_RE.sub(lambda m: f"{m.group(1)}{MASK}", out)
+    out = _KV_RE.sub(_kv_sub, out)
     out = _PREFIX_RE.sub(MASK, out)
     return out
 
@@ -152,9 +197,16 @@ def preview(text: Any, limit: int = 240) -> str:
     # Redact only what can end up in the preview: a 1 MB argument must not cost the agent thread a
     # regex pass over 1 MB (measured: ~120 ms). A secret straddling the cut is masked by the prefix
     # patterns on whichever side keeps its start; the tail is dropped anyway.
-    if len(text) > limit * 8:
-        text = text[: limit * 8]
-    text = redact_text(text)
+    cut = limit * 8
+    if len(text) > cut:
+        # Keep an overlap so a secret straddling the cut still matches its pattern, then drop the
+        # trailing partial token so no secret head survives. A PEM block whose END line lies beyond
+        # the overlap is still masked: _PEM_RE runs to END *or* the end of the slice.
+        head = redact_text(text[: cut + 512])[:cut]
+        sp = max(head.rfind(" "), head.rfind("\n"), head.rfind("\t"))
+        text = head[:sp] if sp > 0 else ""
+    else:
+        text = redact_text(text)
     text = " ".join(text.split())
     if len(text) > limit:
         return text[: limit - 1] + "…"
@@ -164,39 +216,58 @@ def preview(text: Any, limit: int = 240) -> str:
 def bound_args(args: Any, *, per_value: int = 400, total: int = 4000, depth: int = 0) -> Any:
     """Return a JSON-safe, redacted, size-bounded copy of tool arguments.
 
-    Long string values become ``{"$preview": ..., "$chars": n}`` so the shape of
-    the call survives without its payload (a 40 KB ``write_file.content`` is
-    recorded as its length and a redacted first line, never verbatim).
+    Long string values become ``{"$preview": ..., "$chars": n}`` so the shape of the call survives
+    without its payload. *total* is one budget shared by every value at every depth (dicts and lists
+    alike); when it runs out the rest is replaced by ``"$truncated": true``. Keys are redacted too.
     """
+    budget = [int(total)]
+    return _bound(args, per_value, budget, depth)
+
+
+def _bound(args: Any, per_value: int, budget: list, depth: int) -> Any:
+    if budget[0] <= 0:
+        return {"$truncated": True}
     if depth > 6:
         return "…"
     if isinstance(args, dict):
         out: dict[str, Any] = {}
-        budget = total
         for key, value in list(args.items())[:64]:
-            k = str(key)
-            if is_secret_arg_name(k):
+            k = redact_text(str(key))[:100]
+            budget[0] -= len(k) + 4
+            if is_secret_arg_name(str(key)):
                 out[k] = MASK
                 continue
-            bounded = bound_args(value, per_value=per_value, total=budget, depth=depth + 1)
-            out[k] = bounded
-            budget -= len(str(bounded))
-            if budget <= 0:
+            if budget[0] <= 0:
                 out["$truncated"] = True
                 break
+            out[k] = _bound(value, per_value, budget, depth + 1)
+        if len(args) > 64:
+            out["$more"] = len(args) - 64
         return out
     if isinstance(args, (list, tuple)):
-        items = [bound_args(v, per_value=per_value, total=total, depth=depth + 1) for v in list(args)[:32]]
+        items = []
+        for v in list(args)[:32]:
+            if budget[0] <= 0:
+                items.append({"$truncated": True})
+                break
+            items.append(_bound(v, per_value, budget, depth + 1))
         if len(args) > 32:
             items.append({"$more": len(args) - 32})
         return items
     if isinstance(args, str):
         if len(args) > per_value:
-            return {"$preview": preview(args, per_value), "$chars": len(args)}
-        return redact_text(args)
+            out_s = {"$preview": preview(args, per_value), "$chars": len(args)}
+            budget[0] -= per_value + 24
+            return out_s
+        red = redact_text(args)
+        budget[0] -= len(red) + 2
+        return red
     if isinstance(args, (int, float, bool)) or args is None:
+        budget[0] -= 8
         return args
-    return preview(args, per_value)
+    pv = preview(args, per_value)
+    budget[0] -= len(pv) + 2
+    return pv
 
 
 __all__ = ["MASK", "is_secret_param_name", "mask_query_secrets", "redact_text", "preview", "bound_args", "is_secret_arg_name"]

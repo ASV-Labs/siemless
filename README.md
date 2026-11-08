@@ -74,15 +74,28 @@ Hermes observer hooks ──▶ collect() ──▶ bounded queue ──▶ work
 * The agent thread only reduces the payload and enqueues. A full queue drops the oldest event and
   counts it; it never blocks.
 * A dead destination never breaks a session: batches spool to disk (bounded), retry with capped
-  backoff, and replay in order on recovery. A refused token stops retries and shows in health.
+  backoff, and replay in order on recovery. A refusal (401/403, a missing token, a redirect) keeps
+  the events in the spool, retries every 5 minutes instead of hammering, and shows `refused` with
+  the reason in health. Tokens are resolved lazily, so a token set after start is picked up.
   Delivery is **at-least-once**; every event carries its id for dedupe.
 * Rules read a correlation window (default 10 min) keyed on event *time*, so a late callback still
   joins what preceded it. Sessions are never merged; a subagent inherits its parent's taint.
-* Suppression: `allow_hosts`, `allow_paths`, `disable_rules`, and a per-rule dedupe cooldown.
-* Measured (`tests/bench.py`, this sandbox): a hook callback costs the agent thread ~0.4 ms at p50
-  and under 1 ms at p95 whether the tool result is 1 KB or 1 MB; a 1 MB `write_file` argument costs
-  ~0.3 ms (only the first few KB are scanned). Worker latency from event in to finding out is
-  ~0.5 ms p50. Your numbers show in `/siemless status`.
+* Security-relevant events (secret reads, egress, config changes, untrusted content) are also kept in
+  their own ring, so a flood of routine calls cannot push a secret read out of the window.
+* Fetched pages, browser reads and downloaded files are scanned (first 64 KB, nothing stored) for a
+  handful of injection markers — orders to discard earlier instructions, text addressed to the agent, asks
+  for key files, `curl | sh`, hidden HTML, invisible characters. A tainted governance change or
+  credential access is *critical* only when the content carried markers; a plain docs fetch followed
+  by a config edit is *high* (ordinary research looks like that too).
+* Tools SIEMless has no dedicated collector for (MCP servers, other plugins) still produce file,
+  secret, config and egress events from their path/url arguments, labelled *inferred*.
+* Suppression: `allow_hosts`, `allow_paths` (prefixes match whole path segments after
+  normalisation, so `proj/../.ssh` is not inside `proj`), `disable_rules`, and a per-rule dedupe
+  cooldown that never masks an escalation (a later, more severe finding of the same kind fires).
+* Measured (`tests/bench.py`, this sandbox, after the round-1 fixes): a hook callback costs the
+  agent thread ~0.5 ms at p50 and under 1 ms at p95 whether the tool result is 1 KB or 1 MB; a 1 MB
+  `write_file` argument costs ~1.5 ms (only the first ~2 KB are redacted and scanned). Worker latency
+  from event in to finding out is ~1 ms p50. Your numbers show in `/siemless status`.
 
 ## The rules
 
@@ -139,12 +152,18 @@ The full list with descriptions is `plugin.yaml` → `config_schema`, generated 
 **What is stored.** Event metadata: kinds, tool names, paths, hosts, URLs with credentials and
 secret-named query parameters masked, the first redacted line of a command, status, durations,
 correlation ids, token counts. **Never** stored: prompt text, model output, tool results, file
-bodies, message text, secrets. User messages and subagent goals are recorded as a hash and a
+bodies, message text. Secrets are masked by pattern wherever text is kept (arguments, argument
+names, commands, URLs, reasons, kanban fields); a secret no pattern recognises can still be stored,
+which is why the patterns and the canary set grow with every audit. User messages and subagent goals are recorded as a hash and a
 length (`record_prompts: true` adds a 200-character redacted preview). Tool arguments are bounded
-to ~1.5 KB per call and redacted with patterns for vendor key prefixes, `key=value` secrets, bearer
-tokens, PEM blocks, URL credentials, query-string secrets and Telegram bot-token paths (adapted from
-lineage, same author). A canary test proves none of ten synthetic secret shapes reaches the store,
-the exports or any rendered format.
+to ~1.5 KB per call (strings, dicts and lists share one budget) and redacted with patterns for
+vendor key prefixes (Anthropic, OpenAI, GitHub, AWS incl. STS, Stripe, SendGrid, DigitalOcean,
+Grafana, Linear, Slack, Atlassian, Netlify, Pulumi, age …), `key=value` secrets (quoted or not),
+CLI credential flags (`curl -u`, `--password`, `mysql -p`, `sshpass -p`), bearer tokens, PEM blocks
+of any length, URL credentials, query-string secrets, Slack/Discord/Office webhook paths and
+Telegram bot-token paths (adapted from lineage, same author). Redaction runs before any cut. A
+canary test proves none of 23 synthetic secret shapes reaches the store, the exports or any
+rendered format.
 
 **Where.** `<HERMES_HOME>/plugin-data/siemless/`: `siemless.db` (0600, in a 0700 dir), `events.jsonl`,
 `findings.jsonl`, `spool/`. Retention by age and count.
@@ -152,7 +171,10 @@ the exports or any rendered format.
 **Outbound.** Zero by default. With `remote_export: true` and a destination configured, the
 configured syslog/HEC/Elastic/receiver endpoints receive the events in `export_scope`; TLS is
 verified against the system store or your `http_ca_file`/`syslog_ca_file`, and there is no option
-to disable verification. Tokens are read through `agent.secret_scope.get_secret`, never from `.env`.
+to disable verification. Redirects are never followed, so a token cannot be carried to another
+host. Tokens are read through `agent.secret_scope.get_secret`, never from `.env`. **Replays**
+(`siemless replay`, the dashboard's replay) are tagged `replay` in every format, titled
+`[REPLAY]`, correlated in their own namespace, and never sent to a remote exporter.
 
 ### Disclosure
 
@@ -187,13 +209,16 @@ demo is the replay.
 ## Development
 
 ```
-python -m pytest -q tests                       # 74 tests: rules, formats (OCSF validated against the 1.9.0 schema), dispatch, privacy canaries, API, demo variants, packs
+python -m pytest -q tests                       # 120 tests: rules, formats (OCSF validated against the 1.9.0 schema), dispatch, privacy canaries, API, demo variants, packs, audit regressions
 cd tests/js && npm install && npm test          # Desktop page rendered against real backend fixtures (tests/js/make_fixtures.py)
 python tests/bench.py                           # agent-thread cost and detection latency
 python tools/gen_sigma.py                       # regenerate the Sigma pack
 python tools/ocsf_check.py --schema <ocsf-schema checkout> --compile siemless_core/data/ocsf_required.json
 python tools/admission_lint.py <hermes-agent checkout>   # upstream's own `hermes plugins validate` logic (needs ruamel.yaml + packaging)
 ```
+
+Independent audit: [audit/round1.md](audit/round1.md) (5 high, 14 medium, 9 low; all fixed, each with a
+regression test in `tests/test_audit_round1.py` / `tests/test_round1_fixes.py`).
 
 Research behind the shapes and mappings, with sources and what remains unverified:
 [docs/RESEARCH.md](docs/RESEARCH.md). Baseline state when the build started: [docs/BASELINE.md](docs/BASELINE.md).
@@ -205,6 +230,10 @@ Research behind the shapes and mappings, with sources and what remains unverifie
   profile.
 * It does not see the OS. A shell command's network call or file read is inferred from the
   command text; `docs/EVENTS.md` lists exactly what is observed, inferred and unavailable.
-* It does not read the injected text. It sees the fetch and what followed; the transcript holds the words.
+* It does not keep the injected text. It scans fetched content for a few marker shapes and records
+  only which markers matched; the transcript holds the words. No markers proves nothing.
+* One pipeline per process. Under a gateway that multiplexes several profiles in one process, events
+  are filed under the first profile that loaded the plugin (not yet tested against a multiplexed
+  gateway).
 
 MIT · A Salty Vet, a product of ASV Labs.

@@ -10,7 +10,6 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
-import stat
 import threading
 import time
 from pathlib import Path
@@ -337,7 +336,12 @@ class Store:
             self._conn.commit()
 
     # --------------------------------------------------------------- retention
-    def prune(self, *, max_age_days: int = 30, max_events: int = 200_000, max_findings: int = 20_000) -> dict[str, int]:
+    def host_count(self) -> int:
+        with self._lock:
+            return int(self._conn.execute("SELECT COUNT(*) FROM hosts_seen").fetchone()[0])
+
+    def prune(self, *, max_age_days: int = 30, max_events: int = 200_000, max_findings: int = 20_000,
+              max_hosts: int = 50_000) -> dict[str, int]:
         cutoff = int((time.time() - max_age_days * 86400) * 1000)
         with self._lock:
             a = self._conn.execute("DELETE FROM events WHERE time < ?", (cutoff,)).rowcount
@@ -346,8 +350,14 @@ class Store:
             c = self._conn.execute("DELETE FROM findings WHERE time < ?", (cutoff,)).rowcount
             d = self._conn.execute(
                 "DELETE FROM findings WHERE id IN (SELECT id FROM findings ORDER BY time DESC LIMIT -1 OFFSET ?)", (max_findings,)).rowcount
+            # Destinations not seen for 3× the retention period are forgotten (they count as new again).
+            host_cutoff = int((time.time() - max(max_age_days, 1) * 3 * 86400) * 1000)
+            h = self._conn.execute("DELETE FROM hosts_seen WHERE last_seen < ?", (host_cutoff,)).rowcount
+            h += self._conn.execute(
+                "DELETE FROM hosts_seen WHERE host IN (SELECT host FROM hosts_seen ORDER BY last_seen DESC LIMIT -1 OFFSET ?)",
+                (max_hosts,)).rowcount
             self._conn.commit()
-        return {"events_by_age": a, "events_by_count": b, "findings_by_age": c, "findings_by_count": d}
+        return {"events_by_age": a, "events_by_count": b, "findings_by_age": c, "findings_by_count": d, "hosts": h}
 
     def db_size(self) -> int:
         try:

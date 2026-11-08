@@ -63,6 +63,12 @@ class Finding:
         return out
 
 
+def _norm(p: str) -> str:
+    from ..sensitive import _norm_path
+
+    return _norm_path(p)
+
+
 class RuleContext:
     """What a rule may look at. A thin, read-only view over the correlator."""
 
@@ -99,7 +105,19 @@ class RuleContext:
         if not path:
             return False
         allow = self.config.get("allow_paths") or []
-        return any(path.startswith(a) or path.endswith(a) for a in allow if a)
+        norm = _norm(path)
+        for a in allow:
+            if not a:
+                continue
+            if a.startswith(("/", "~", "$")):
+                # A prefix: containment on the *normalised* path at a segment boundary, so
+                # /home/u/proj/../.ssh/id_rsa is not "inside" /home/u/proj and /home/u/project is not either.
+                base = _norm(a).rstrip("/") or "/"
+                if norm == base or norm.startswith(base.rstrip("/") + "/"):
+                    return True
+            elif norm.endswith(a) and ".." not in a:
+                return True  # a suffix such as .env.example
+        return False
 
     @property
     def window_ms(self) -> int:

@@ -21,7 +21,7 @@ from .config import in_scope, load as load_config
 from .correlate import Correlator
 from .detect import Engine, finding_event, finding_to_dict
 from .dispatch import Dispatcher
-from .events import Event
+from .events import REPLAY_TAG, Event
 from .exporters.http import ElasticExporter, HecExporter, SummitExporter
 from .exporters.jsonl import JsonlExporter
 from .exporters.syslog import SyslogExporter
@@ -42,6 +42,13 @@ class Pipeline:
         self.corr = Correlator(window_ms=int(self.config["window_minutes"]) * 60 * 1000,
                                first_seen_host=self._first_seen_host)
         self.engine = Engine(self.corr, self.config)
+        # Replays (fixtures, recordings) run in their own namespace: their own correlation state and an
+        # in-memory host history, so a forged recording can neither correlate with live sessions nor
+        # mark a destination as "already known" for live first-seen checks.
+        self._replay_hosts: set[str] = set()
+        self.replay_corr = Correlator(window_ms=int(self.config["window_minutes"]) * 60 * 1000,
+                                      first_seen_host=self._replay_first_seen)
+        self.replay_engine = Engine(self.replay_corr, self.config)
         self._in: "queue.Queue[Event]" = queue.Queue(maxsize=max(1000, int(self.config["queue_size"])))
         self.dropped_in = 0
         self.processed = 0
@@ -109,12 +116,29 @@ class Pipeline:
     def _first_seen_host(self, host: str, when: int) -> bool:
         return self.store.note_host(host, when)
 
+    def _replay_first_seen(self, host: str, when: int) -> bool:
+        if host in self._replay_hosts:
+            return False
+        if len(self._replay_hosts) > 10_000:
+            self._replay_hosts.clear()
+        self._replay_hosts.add(host)
+        return True
+
+    @staticmethod
+    def _mark_replay(e: Event) -> None:
+        if REPLAY_TAG not in e.tags:
+            e.tags.insert(0, REPLAY_TAG)
+        e.attrs["replay"] = True
+
     # ------------------------------------------------------------------ ingress
     def ingest(self, hook: str, payload: dict) -> list[Event]:
         """Agent-thread entry point: collect, enqueue, return. Microseconds."""
         events = collect(hook, payload, config=self.config)
+        replay = bool(isinstance(payload, dict) and payload.get("_replay"))
         for e in events:
             e.profile = e.profile or self.profile
+            if replay:
+                self._mark_replay(e)
             try:
                 self._in.put_nowait(e)
             except queue.Full:
@@ -124,9 +148,12 @@ class Pipeline:
     def process_now(self, hook: str, payload: dict) -> tuple[list[Event], list[dict]]:
         """Synchronous: collect and run the full chain on the caller's thread (tests, replay)."""
         events = collect(hook, payload, config=self.config)
+        replay = bool(isinstance(payload, dict) and payload.get("_replay"))
         findings: list[dict] = []
         for e in events:
             e.profile = e.profile or self.profile
+            if replay:
+                self._mark_replay(e)
             findings += self._process(e)
         return events, findings
 
@@ -136,10 +163,10 @@ class Pipeline:
     # ------------------------------------------------------------------ worker
     def _run(self) -> None:
         while not self._stop.is_set():
+            self._housekeeping()  # wall-clock check every iteration: a busy agent must still get pruned
             try:
                 e = self._in.get(timeout=0.5)
             except queue.Empty:
-                self._housekeeping()
                 continue
             try:
                 self._process(e)
@@ -156,17 +183,19 @@ class Pipeline:
         self.processed += 1
         self.last_event_at = e.time
         out: list[dict] = []
-        st = self.corr.add(e)
+        replay = REPLAY_TAG in e.tags
+        corr, engine = (self.replay_corr, self.replay_engine) if replay else (self.corr, self.engine)
+        st = corr.add(e)
         to_export: list[Event] = []
         if in_scope(e.kind, e.tags, self.config["export_scope"]):
             to_export.append(e)
         if st is not None:
-            for f in self.engine.evaluate(e, st):
-                fd = finding_to_dict(f, profile=self.profile)
+            for f in engine.evaluate(e, st):
+                fd = finding_to_dict(f, profile=self.profile, replay=replay)
                 self.store.add_finding(fd)
                 fe = finding_event(fd)
                 self.store.add_events([fe])
-                self.corr.add(fe)
+                corr.add(fe)
                 to_export.append(fe)
                 out.append(fd)
                 self.findings_total += 1
@@ -206,7 +235,7 @@ class Pipeline:
             "rules": {"enabled": len(self.engine.rules), "evaluations": self.engine.evaluations, "suppressed": self.engine.suppressed},
             "correlator": self.corr.stats(), "queue": self.dispatcher.queue_health(), "exporters": exporters, "live": self.live,
             "export_scope": self.config["export_scope"], "remote_export": bool(self.config.get("remote_export")),
-            "db_bytes": self.store.db_size(), "hosts_known": len(self.store.hosts(100000)),
+            "db_bytes": self.store.db_size(), "hosts_known": self.store.host_count(),
             "latency_ms": {"p50": _pct(self.latency_ms, 50), "p95": _pct(self.latency_ms, 95), "n": len(self.latency_ms)},
         }
 

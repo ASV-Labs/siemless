@@ -7,10 +7,13 @@ answer they give is an **inference from arguments**; the caller labels the event
 
 from __future__ import annotations
 
+import fnmatch
+import ipaddress
 import os
+import posixpath
 import re
 import shlex
-from typing import Iterable, Optional
+from typing import Optional
 from urllib.parse import urlsplit
 
 # ----------------------------------------------------------------------------- sensitive paths
@@ -45,6 +48,7 @@ _SENSITIVE_PATHS: list[tuple[re.Pattern, str]] = [
 
 # Files whose edit changes how the agent is governed. Tag names the control.
 _SECURITY_CONFIG_PATHS: list[tuple[re.Pattern, str]] = [
+    (re.compile(r"(^|/)plugin-data/siemless(/|$)|(^|/)siemless\.db(-wal|-shm)?$|(^|/)(events|findings)\.jsonl(\.\d+)?$"), "siemless"),
     (re.compile(r"(^|/)\.hermes/(profiles/[^/]+/)?config\.ya?ml$"), "hermes_config"),
     (re.compile(r"(^|/)\.hermes/(profiles/[^/]+/)?\.env$"), "hermes_env"),
     (re.compile(r"(^|/)\.hermes/(profiles/[^/]+/)?(SOUL|AGENTS|USER|MEMORY)\.md$", re.I), "agent_instructions"),
@@ -67,8 +71,31 @@ def _norm_path(path: str) -> str:
     p = str(path).strip().strip("'\"")
     p = p.replace("\\", "/")
     p = re.sub(r"^~", "/home/~", p)  # keep '~' recognisable without expanding the real home
-    p = re.sub(r"^\$HOME", "/home/~", p)
+    p = re.sub(r"^\$\{?HOME\}?", "/home/~", p)
+    if ".." in p or "/./" in p or "//" in p:
+        p = posixpath.normpath(p)
     return p
+
+
+# Where a glob (``~/.ss?/id_*``) is used, it is matched against these canonical credential paths.
+_GLOB_PROBES = (
+    "/home/~/.ssh/id_rsa", "/home/~/.ssh/id_ed25519", "/home/~/.ssh/id_ecdsa", "/home/~/.ssh/authorized" + "_keys",
+    "/home/~/.aws/credentials", "/home/~/.aws/config", "/home/~/.env", "/repo/.env", "/home/~/.netrc", "/home/~/.git-credentials",
+    "/home/~/.docker/config.json", "/home/~/.kube/config", "/home/~/.gnupg/private-keys-v1.d/k.key", "/home/~/.hermes/.env",
+    "/home/~/.hermes/auth.json", "/home/~/.npmrc", "/home/~/.pypirc", "/home/~/.config/gh/hosts.yml",
+    "/home/~/Library/Keychains/login.keychain-db", "/home/~/.bash_history", "/home/~/.zsh_history",
+    "/home/~/Library/Application Support/Google/Chrome/Default/Login Data", "/home/~/key.pem",
+)
+
+
+def _glob_candidates(p: str) -> list[str]:
+    if not any(c in p for c in "*?["):
+        return []
+    try:
+        rx = re.compile(fnmatch.translate(p))
+    except re.error:
+        return []
+    return [c for c in _GLOB_PROBES if rx.match(c)]
 
 
 def classify_path(path: Optional[str]) -> list[str]:
@@ -77,16 +104,32 @@ def classify_path(path: Optional[str]) -> list[str]:
     if not path:
         return []
     p = _norm_path(path)
+    candidates = [p] + _glob_candidates(p)
     tags: list[str] = []
-    for rx, tag in _SENSITIVE_PATHS:
-        if rx.search(p):
-            tags.append(f"sensitive:{tag}")
+    for c in candidates:
+        for rx, tag in _SENSITIVE_PATHS:
+            if rx.search(c):
+                tags.append(f"sensitive:{tag}")
+                break
+        if tags:
             break
-    for rx, tag in _SECURITY_CONFIG_PATHS:
-        if rx.search(p):
-            tags.append(f"config:{tag}")
+    for c in candidates:
+        hit = False
+        for rx, tag in _SECURITY_CONFIG_PATHS:
+            if rx.search(c):
+                tags.append(f"config:{tag}")
+                hit = True
+                break
+        if hit:
             break
+    if len(candidates) > 1 and tags:
+        tags.append("path:glob")
     return tags
+
+
+def is_template_path(path: Optional[str]) -> bool:
+    """``.env.example``, ``secrets.sample.json``, ``credentials.template`` — documentation, not credentials."""
+    return bool(path) and bool(re.search(r"(?i)\.(example|sample|template|dist|tmpl)(\.[a-z0-9]+)?$|(example|sample|template)[^/]*$", str(path)))
 
 
 def paths_in_text(text: str) -> list[str]:
@@ -139,12 +182,44 @@ DEV_HOSTS = (
 )
 
 
+def normalize_host(h: Optional[str]) -> Optional[str]:
+    """Lower-case, strip the trailing root dot, IDNA-encode, and canonicalise numeric IPv4 forms
+    (``2130706433``, ``0x7f000001``, ``0177.0.0.1``) to dotted quads."""
+    if not h:
+        return None
+    h = h.strip().strip("[]").rstrip(".").lower()
+    if not h:
+        return None
+    try:
+        h = h.encode("idna").decode("ascii")
+    except (UnicodeError, ValueError):
+        pass
+    try:
+        return str(ipaddress.ip_address(h))
+    except ValueError:
+        pass
+    if re.fullmatch(r"(0x[0-9a-f]+|\d+)", h):
+        try:
+            return str(ipaddress.IPv4Address(int(h, 0)))
+        except (ValueError, ipaddress.AddressValueError):
+            return h
+    parts = h.split(".")
+    if 1 < len(parts) <= 4 and all(re.fullmatch(r"(0x[0-9a-f]+|0[0-7]*|\d+)", x) for x in parts):
+        try:
+            nums = [int(x, 16) if x.startswith("0x") else (int(x, 8) if len(x) > 1 and x.startswith("0") else int(x)) for x in parts]
+            if len(nums) == 4 and all(0 <= n <= 255 for n in nums):
+                return ".".join(str(n) for n in nums)
+        except ValueError:
+            return h
+    return h
+
+
 def host_of(url: Optional[str]) -> Optional[str]:
     if not url:
         return None
     try:
         parts = urlsplit(url if "://" in url else "//" + url)
-        return (parts.hostname or "").lower() or None
+        return normalize_host(parts.hostname)
     except ValueError:
         return None
 
@@ -152,16 +227,19 @@ def host_of(url: Optional[str]) -> Optional[str]:
 def classify_host(host: Optional[str]) -> list[str]:
     if not host:
         return []
-    h = host.lower()
+    h = normalize_host(host) or ""
     tags: list[str] = []
     if any(h == w or h.endswith("." + w) for w in WEBHOOK_HOSTS):
         tags.append("egress:webhook")
     if any(h == d or h.endswith("." + d) for d in DEV_HOSTS):
         tags.append("egress:dev")
-    if re.fullmatch(r"\d{1,3}(\.\d{1,3}){3}", h):
+    try:
+        ip = ipaddress.ip_address(h)
         tags.append("egress:raw_ip")
-        if h.startswith(("10.", "192.168.", "127.")) or re.match(r"172\.(1[6-9]|2\d|3[01])\.", h):
+        if ip.is_private or ip.is_loopback or ip.is_link_local:
             tags.append("egress:private")
+    except ValueError:
+        pass
     if h in ("localhost",) or h.endswith(".local") or h.endswith(".localhost"):
         tags.append("egress:private")
     return tags
@@ -271,6 +349,11 @@ _CMD_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     (re.compile(r"\b(python3?|perl|ruby|node)\s+-[ce]\s+['\"][^'\"]*(exec|eval|base64|b64decode|compile|__import__|fromCharCode)", re.S), "cmd:inline_exec", "inline interpreter code that decodes or evals"),
     (re.compile(r"\beval\s+[\"$`(]"), "cmd:eval", "shell eval of dynamic content"),
     (re.compile(r"/dev/(tcp|udp)/"), "cmd:reverse_shell", "bash network redirection"),
+    (re.compile(r"\bsocket\b.*\bconnect\b.*\b(dup2|pty\.spawn|subprocess|os\.system|exec)\b", re.S), "cmd:reverse_shell", "interpreter socket wired to a shell"),
+    (re.compile(r"\bIO::Socket|fsockopen\s*\(|TCPSocket\.(new|open)", re.S), "cmd:reverse_shell", "interpreter socket shell"),
+    (re.compile(r"(\$\(|`|<\()\s*(curl|wget)\b", re.S), "cmd:download_exec", "remote content executed through command substitution"),
+    (re.compile(r"(curl|wget)\b[^;&|\n]*\s-(o|O)\s*(\S+)[^;&|\n]*(&&|;|\n)\s*(sudo\s+)?(ba|z|da)?sh\s+\S+", re.S), "cmd:download_exec", "downloads a script then runs it"),
+    (re.compile(r"base64\s+(-d|--decode|-D)\b[^;&|\n]*>\s*\S+[^;&|\n]*(&&|;|\n)\s*(ba|z)?sh\b", re.S), "cmd:decode_exec", "decodes to a file then runs it"),
     (re.compile(r"\b(nc|ncat|netcat)\b.*\s-(e|c)\s", re.S), "cmd:reverse_shell", "netcat with command execution"),
     (re.compile(r"\bsocat\b.*\bexec:", re.I), "cmd:reverse_shell", "socat exec relay"),
     (re.compile(r"\bmkfifo\b.*\b(nc|ncat|sh)\b", re.S), "cmd:reverse_shell", "fifo-based shell relay"),
@@ -278,11 +361,12 @@ _CMD_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     (re.compile(r"\$\{[A-Za-z_]+:[0-9]+:[0-9]+\}.*\$\{[A-Za-z_]+:[0-9]+:[0-9]+\}"), "cmd:string_slicing", "string-slice obfuscation"),
     (re.compile(r"\bchmod\s+([ug]\+s|[2-7][0-7]{3})\b"), "cmd:setuid", "setuid/setgid bit"),
     (re.compile(r"\b(history\s+-c|unset\s+HISTFILE|HISTSIZE=0|export\s+HISTFILESIZE=0|shred\b.*history|rm\b.*_history)"), "cmd:antiforensics", "shell history tampering"),
-    (re.compile(r"\b(crontab\s+-|launchctl\s+(load|bootstrap|submit)|systemctl\s+(--user\s+)?(enable|start)\b|schtasks\s+/create|at\s+now)", re.I), "cmd:persistence", "scheduled task or service persistence"),
+    (re.compile(r"\b(crontab\b(?!\s+-l\b)|launchctl\s+(load|bootstrap|submit)|systemctl\s+(--user\s+)?(enable|start)\b|schtasks\s+/create|at\s+now)", re.I), "cmd:persistence", "scheduled task or service persistence"),
     (re.compile(r"\b(nohup|setsid|disown)\b|&\s*$"), "cmd:background", "detached background process"),
     (re.compile(r"\bsudo\b"), "cmd:sudo", "privilege escalation"),
     (re.compile(r"\b(cat|less|more|head|tail|strings|grep|xxd|hexdump|od)\b[^|;&]*(\.ssh/|id_rsa|\.env\b|\.aws/|\.netrc|credentials|auth\.json|\.pem\b|\.key\b|shadow\b)", re.S), "cmd:credential_read", "reads a credential store"),
-    (re.compile(r"\b(printenv|env)\s*($|\||>)|\becho\s+\$[A-Z_]*(KEY|TOKEN|SECRET|PASS)", re.S), "cmd:env_dump", "dumps environment variables"),
+    # A dump: printenv/env to a file, a network client, or the screen whole. `env | grep PYTHON` is a filter, not a dump.
+    (re.compile(r"\b(printenv|env)\s*(>|\|\s*(curl|wget|nc|ncat|base64|tee|xclip|pbcopy)\b)|\b(printenv|env)\s*$|\becho\s+\$[A-Z_]*(KEY|TOKEN|SECRET|PASS)", re.S), "cmd:env_dump", "dumps environment variables"),
     (re.compile(r"\bsecurity\s+(find-(generic|internet)-password|dump-keychain|export)\b"), "cmd:keychain", "macOS keychain extraction"),
     (re.compile(r"\b(gh\s+auth\s+token|aws\s+(sts\s+get-session-token|configure\s+get|secretsmanager\s+get-secret-value)|gcloud\s+auth\s+print-access-token|az\s+account\s+get-access-token|vault\s+(read|kv\s+get)|op\s+(read|item\s+get)|pass\s+show|kubectl\s+get\s+secret)", re.I), "cmd:token_fetch", "fetches a live credential from a CLI"),
     (re.compile(r"\b(sqlite3|python3?)\b[^|;]*\b(Login Data|Cookies|cookies\.sqlite|logins\.json)\b", re.I), "cmd:browser_creds", "browser credential store access"),
@@ -290,7 +374,9 @@ _CMD_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     (re.compile(r"\bgit\s+remote\s+(add|set-url)\b"), "cmd:git_remote_change", "changes a git remote"),
     (re.compile(r"\bgh\s+(repo\s+create|release\s+(create|upload)|gist\s+create|secret\s+set)\b"), "cmd:gh_publish", "publishes through the GitHub CLI"),
     (re.compile(r"\bhermes\s+plugins?\s+(install|enable|disable|remove|update)\b"), "cmd:hermes_plugin", "changes installed plugins"),
-    (re.compile(r"\bhermes\s+config\s+set\s+(approvals|terminal\.backend|plugins|hooks|auth|yolo)", re.I), "cmd:hermes_security_config", "changes a Hermes security setting"),
+    (re.compile(r"\bhermes\s+config\s+set\s+(approvals|terminal\.backend|plugins|hooks|auth|yolo)|\bHERMES_[A-Z_]*(YOLO|APPROVALS?_MODE)[A-Z_]*\s*=", re.I), "cmd:hermes_security_config", "changes a Hermes security setting"),
+    (re.compile(r"\b(rm|shred|truncate|unlink|mv|sqlite3|dd)\b[^|;&\n]*(plugin-data/siemless|siemless\.db|(events|findings)\.jsonl)|>\s*\S*(plugin-data/siemless|siemless\.db|(events|findings)\.jsonl)", re.I), "cmd:telemetry_tamper", "alters or deletes SIEMless's own records"),
+    (re.compile(r"\bhermes\s+siemless\s+(ack|replay)\b|plugins\.entries\.siemless|plugins\s+(disable|remove|uninstall)\s+siemless", re.I), "cmd:siemless_control", "changes what SIEMless records or reports"),
     (re.compile(r"\bhermes\s+(cron|schedule|jobs?)\s+(add|create|enable)\b"), "cmd:hermes_cron", "creates a Hermes scheduled job"),
     (re.compile(r"\b(tar|zip|7z|gzip)\b[^|;]*(\.ssh|\.aws|\.gnupg|\.env|credentials|keychain)", re.I), "cmd:credential_archive", "archives a credential store"),
     (re.compile(r"\b(rm|shred|truncate)\b[^|;]*(/var/log|\.hermes/logs|audit|wtmp|lastlog)", re.I), "cmd:log_tamper", "removes logs"),
@@ -298,10 +384,20 @@ _CMD_PATTERNS: list[tuple[re.Pattern, str, str]] = [
 ]
 
 
+def deobfuscate(cmd: str) -> str:
+    """Undo the cheapest shell spellings that hide a word from a regex: empty quotes (``tc''p``),
+    backslash-escaped letters (``c\\url``) and line continuations."""
+    c = cmd.replace("\\\n", "")
+    c = re.sub(r"(?<=\w)(''|\"\")(?=\w)", "", c)
+    c = re.sub(r"\\([A-Za-z])", r"\1", c)
+    return c
+
+
 def classify_command(cmd: Optional[str]) -> list[tuple[str, str]]:
     """``[(tag, reason), ...]`` for every suspicious shape in *cmd*. Order follows the table."""
     if not cmd:
         return []
+    cmd = deobfuscate(cmd)
     out: list[tuple[str, str]] = []
     seen: set[str] = set()
     for rx, tag, reason in _CMD_PATTERNS:
@@ -367,6 +463,32 @@ def first_str(args: dict, *keys: str) -> Optional[str]:
 __all__ = [
     "classify_path", "paths_in_text", "classify_host", "host_of", "egress_from_command", "classify_command",
     "command_preview", "is_untrusted_path", "browser_action", "first_str", "WEBHOOK_HOSTS", "DEV_HOSTS",
-    "FILE_READ_TOOLS", "FILE_WRITE_TOOLS", "EXEC_TOOLS", "WEB_TOOLS", "SEND_TOOLS", "DELEGATE_TOOLS",
+    "FILE_READ_TOOLS", "FILE_WRITE_TOOLS", "is_template_path", "normalize_host", "deobfuscate", "EXEC_TOOLS", "WEB_TOOLS", "SEND_TOOLS", "DELEGATE_TOOLS",
     "CRON_TOOLS", "SKILL_TOOLS",
 ]
+
+
+# ------------------------------------------------------------------------- injection markers
+# Phrases and shapes that show up in indirect prompt injections. Their presence in fetched content is
+# evidence the content *addressed the agent*; their absence proves nothing (the audit trail says so).
+_INJECTION_PATTERNS = [
+    ("ignore_instructions", r"(?i)\b(ignore|disregard|forget|override)\b.{0,40}\b(previous|prior|above|all|earlier|your)\b.{0,30}\b(instructions?|rules|prompts?|directives?)"),
+    ("role_reassign", r"(?i)\b(you are now|from now on,? you|new instructions?:|system prompt:|developer mode|act as (an? )?(admin|root|system))"),
+    ("agent_address", r"(?i)\b(ai|llm|language model|assistant|agent|claude|hermes|gpt)\b.{0,40}\b(must|should|need to|are instructed to|please)\b.{0,60}\b(read|send|upload|run|execute|curl|post|email|write|append)"),
+    ("secret_ask", r"(?i)\b(read|cat|print|send|upload|post|include|paste)\b.{0,60}(\.ssh|id_rsa|id_ed25519|\.env\b|credentials|api[_ -]?key|private key|authorized[_]keys|auth\.json)"),
+    ("exec_ask", r"(?i)(curl|wget)\s+[^\n]{0,200}\|\s*(ba|z)?sh\b"),
+    ("hidden_text", r"(?is)(<!--.{0,400}?(instruction|assistant|agent|ignore).{0,400}?-->|display\s*:\s*none|font-size\s*:\s*0|color\s*:\s*(#fff(fff)?|white)\s*;\s*background)"),
+    ("invisible_chars", "[\u200b\u200c\u200d\u2060\u2062\u2063\u2064\ufeff\U000e0000-\U000e007f]{3,}"),
+]
+_INJECTION_RES = [(n, re.compile(rx)) for n, rx in _INJECTION_PATTERNS]
+MAX_CONTENT_SCAN = 65_536
+
+
+def injection_markers(text) -> list[str]:
+    """Names of injection markers found in the first MAX_CONTENT_SCAN characters of *text*."""
+    if isinstance(text, bytes):
+        text = text[:MAX_CONTENT_SCAN].decode("utf-8", "replace")
+    if not isinstance(text, str) or not text:
+        return []
+    t = text[:MAX_CONTENT_SCAN]
+    return [n for n, rx in _INJECTION_RES if rx.search(t)]

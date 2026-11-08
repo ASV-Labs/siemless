@@ -2,7 +2,8 @@
 
 All three share one verifying HTTPS client (stdlib ``urllib`` + ``ssl``): https only, certificate
 and hostname verification always on, bounded body size, a timeout, and a clear split between
-retryable failures (network, 5xx, 429) and refusals (401/403/400 → not retried, surfaced in health).
+retryable failures (network, 5xx, 429) and refusals (401/403/400, redirects → spooled, retried on the
+long backoff, surfaced in health). Redirects are never followed, so a token never moves to another host.
 Tokens come from Hermes's secret route (``agent.secret_scope.get_secret``) when inside Hermes, so
 the plugin never reads ``.env`` itself.
 """
@@ -18,10 +19,18 @@ from typing import Callable, Optional
 from urllib.parse import urlsplit
 
 from ..events import Event
-from ..ocsf import dumps, to_ecs, to_ocsf
+from ..ocsf import dumps
 from . import Exporter, ExportError, ExportRefused, render, tls_context
 
 MAX_BODY = 5 * 1024 * 1024  # bytes per request; HEC's default max_content_length is far higher, Elastic's 100 MB
+MAX_RESPONSE = 4 * 1024 * 1024  # a _bulk response for a full batch is far larger than a status line
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Never follow a redirect: the Authorization header would go wherever the Location points."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: D401
+        raise ExportRefused(f"redirect {code} to {urlsplit(newurl).netloc or newurl[:80]} refused; set the final URL")
 
 
 def secret(name: str, config: dict) -> Optional[str]:
@@ -53,6 +62,10 @@ class _Https(Exporter):
         self.gzip = bool(config.get("gzip", False))
         self._ctx = tls_context(self.ca_file) if parts.scheme == "https" else None
         self._token = secret(self.token_env, config) if self.token_env else None
+        handlers = [_NoRedirect()]
+        if self._ctx is not None:
+            handlers.append(urllib.request.HTTPSHandler(context=self._ctx))
+        self._opener = urllib.request.build_opener(*handlers)
 
     def _post(self, body: bytes, headers: dict[str, str]) -> tuple[int, bytes]:
         if len(body) > MAX_BODY:
@@ -62,8 +75,12 @@ class _Https(Exporter):
             headers = {**headers, "Content-Encoding": "gzip"}
         req = urllib.request.Request(self.url, data=body, method="POST", headers={"User-Agent": "siemless/0.1", **headers})
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout, context=self._ctx) as resp:  # noqa: S310 - https enforced above
-                return resp.status, resp.read(4096)
+            with self._opener.open(req, timeout=self.timeout) as resp:  # noqa: S310 - https enforced above
+                if 300 <= resp.status < 400:
+                    raise ExportRefused(f"{self.name}: HTTP {resp.status} redirect refused")
+                return resp.status, resp.read(MAX_RESPONSE)
+        except ExportRefused:
+            raise
         except urllib.error.HTTPError as exc:
             status = exc.code
             detail = exc.read(512).decode("utf-8", "replace") if exc.fp else ""
@@ -72,6 +89,13 @@ class _Https(Exporter):
             raise ExportError(f"{self.name}: HTTP {status} {detail[:200]}") from exc
         except (urllib.error.URLError, OSError, ValueError) as exc:
             raise ExportError(f"{self.name}: {exc}") from exc
+
+    def _resolve_token(self) -> Optional[str]:
+        """Resolve lazily: the first hook may run outside a profile's secret scope, and an owner may set the
+        token after start. A missing token is a refusal (spooled, retried on the long backoff), not a crash."""
+        if not self._token and self.token_env:
+            self._token = secret(self.token_env, self.config)
+        return self._token
 
     def describe(self) -> dict:
         d = super().describe()
@@ -92,7 +116,7 @@ class HecExporter(_Https):
         self.source = config.get("source") or "hermes-agent"
 
     def send(self, batch: list[Event]) -> None:
-        if not self._token:
+        if not self._resolve_token():
             raise ExportRefused("hec: SIEMLESS_HEC_TOKEN is not set")
         lines = []
         for e in batch:
@@ -121,23 +145,52 @@ class ElasticExporter(_Https):
         self.data_stream = config.get("data_stream") or "logs-siemless.hermes-default"
         if not self.url.rstrip("/").endswith("/_bulk"):
             self.url = self.url.rstrip("/") + "/_bulk"
+        self.rejected = 0               # documents Elastic refused for good (mapping errors etc.)
+        self.last_item_error: Optional[str] = None
 
     def send(self, batch: list[Event]) -> None:
-        if not self._token:
+        if not self._resolve_token():
             raise ExportRefused("elastic: SIEMLESS_ELASTIC_API_KEY is not set")
         lines = []
         for e in batch:
-            lines.append(dumps({"create": {"_index": self.data_stream}}))
+            # _id = the event id: a retried batch cannot duplicate documents (Elastic answers 409 instead).
+            lines.append(dumps({"create": {"_index": self.data_stream, "_id": e.id}}))
             lines.append(render(e, "ecs", hostname=self.hostname))
         body = ("\n".join(lines) + "\n").encode("utf-8")
         status, resp = self._post(body, {"Authorization": f"ApiKey {self._token}", "Content-Type": "application/x-ndjson"})
         if status not in (200, 201):
             raise ExportError(f"elastic: unexpected status {status}")
         try:
-            if json.loads(resp.decode("utf-8", "replace")).get("errors"):
-                raise ExportError("elastic: bulk response reported item errors")
+            doc = json.loads(resp.decode("utf-8", "replace"))
         except ValueError:
-            pass
+            return
+        if not isinstance(doc, dict) or not doc.get("errors"):
+            return
+        retry, bad = 0, 0
+        items = doc.get("items") if isinstance(doc.get("items"), list) else []
+        for it in items:
+            r = (it or {}).get("create") or (it or {}).get("index") or {}
+            st = int(r.get("status") or 0)
+            if st < 300 or st == 409:   # stored now, or stored by an earlier attempt
+                continue
+            if st == 429 or st >= 500:
+                retry += 1
+            else:
+                bad += 1
+                err = r.get("error")
+                self.last_item_error = (json.dumps(err)[:300] if err else f"status {st}")
+        if not items:
+            bad = len(batch)  # errors with no item detail: count the batch as rejected rather than wedge on it
+            self.last_item_error = "bulk reported errors without item detail"
+        if retry:
+            raise ExportError(f"elastic: {retry} item(s) throttled or failed server-side; retrying (ids dedupe)")
+        # Permanent per-document errors are not retried: one bad document must not stop every later event.
+        self.rejected += bad
+
+    def describe(self) -> dict:
+        d = super().describe()
+        d.update({"rejected": self.rejected, "last_item_error": self.last_item_error})
+        return d
 
 
 class SummitExporter(_Https):
@@ -158,7 +211,7 @@ class SummitExporter(_Https):
         self._lookup = finding_lookup
 
     def send(self, batch: list[Event]) -> None:
-        if not self._token:
+        if not self._resolve_token():
             raise ExportRefused("summit: SIEMLESS_SUMMIT_TOKEN is not set")
         findings = []
         events = []

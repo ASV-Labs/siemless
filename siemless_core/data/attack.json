@@ -262,6 +262,16 @@
    "version": "2.0",
    "url": "https://attack.mitre.org/techniques/T1195/001"
   },
+  "T1528": {
+   "name": "Steal Application Access Token",
+   "tactics": [
+    "credential-access"
+   ],
+   "revoked": false,
+   "deprecated": false,
+   "version": "1.5",
+   "url": "https://attack.mitre.org/techniques/T1528"
+  },
   "T1546": {
    "name": "Event Triggered Execution",
    "tactics": [

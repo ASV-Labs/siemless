@@ -9,7 +9,7 @@ the machine unless ``remote_export`` is true and a destination is configured. Se
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Optional
 
 from .siemless_core import PLUGIN_ID, __version__
 from .siemless_core.collectors import HOOKS

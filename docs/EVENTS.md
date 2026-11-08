@@ -43,6 +43,7 @@ inferred → low, and a rule may cap it lower (SL-002's causality is temporal, s
 |---|---|---|
 | Which tool ran, with what arguments, and did it succeed | **observed** | `post_tool_call` (`status`, `args`, `duration_ms`) |
 | A file read or written by the file tools | **observed** | `read_file` / `write_file` / `patch` args + status |
+| A file or URL named by a tool SIEMless has no collector for (MCP servers, other plugins) | **inferred** | `path`/`file_path`/`url`-style args through the same classifiers, tagged `via:other_tool` |
 | A file touched by a shell command | **inferred** | path tokens in the command text; the OS call is not visible |
 | A credential store targeted | observed or inferred | path classifier over either of the above; the bytes are never seen |
 | An HTTP fetch by `web_extract` / browser navigation | **observed** | url arg + status |
@@ -60,8 +61,9 @@ inferred → low, and a rule may cap it lower (SL-002's causality is temporal, s
 | Hermes config / .env / hooks / SOUL.md edited | observed (file tools) or inferred (commands) | path classifier |
 | Approval mode changed | **inferred** | `/yolo`, `/approvals …`, `hermes config set approvals…` in a command |
 | Slash commands | **observed** (name + bounded args) | `pre_command` |
-| Untrusted content entering the context | **observed for the fetch**; the *content* is not inspected | `web_*`, browser, downloaded-file reads |
+| Untrusted content entering the context | **observed for the fetch**; the content is scanned, not kept | `web_*`, browser, downloaded-file reads; the first 64 KB of the result are matched against a few injection-marker shapes and only the marker *names* are recorded |
 | Prompt text, tool results, file bodies | **not recorded** by default | hashes and lengths only; `record_prompts` adds a 200-char redacted preview of user messages |
 | Whether the OS served a file's bytes, whether a socket opened, what a decoded payload did | **unavailable** | application-level hooks only; pair with host telemetry (auditd, EDR) for that |
 | Network calls made by a plugin or MCP server directly (not via a tool) | **unavailable** | no hook covers provider-side plugin traffic |
-| Prompt injection *content* | **unavailable** | SIEMless sees the fetch and the downstream action, not the injected text; the transcript has it |
+| Prompt injection *content* | **unavailable** | SIEMless records which marker shapes matched, never the injected text; the transcript has it. No marker match proves nothing |
+| SIEMless's own integrity | **inferred** | writes/deletes of its data, `sqlite3` on its DB, `hermes siemless ack` / `replay`, `plugins.entries.siemless` edits → SL-010 "SIEMless itself was changed"; a process with root on the host can still erase it silently — export remotely if that matters |

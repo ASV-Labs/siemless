@@ -18,7 +18,11 @@ def main() -> int:
     ha = Path(sys.argv[1]).resolve()
     plugin = Path(sys.argv[2] if len(sys.argv) > 2 else Path(__file__).resolve().parents[1]).resolve()
     sys.path.insert(0, str(ha))
-    validate = importlib.import_module("hermes_cli.plugin_validate").validate_plugin_dir
+    try:
+        validate = importlib.import_module("hermes_cli.plugin_validate").validate_plugin_dir
+    except ModuleNotFoundError as exc:
+        print(f"admission_lint: {exc}. Run it from a venv with: pip install 'ruamel.yaml==0.18.17' packaging", file=sys.stderr)
+        return 2
     report = validate(plugin)
     bad = 0
     for name, ok, detail in report.checks:

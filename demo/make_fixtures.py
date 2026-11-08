@@ -27,6 +27,12 @@ TEST_OUT = Path(__file__).resolve().parents[1] / "tests" / "fixtures"
 C_ANT = "sk-" + "ant-api03-" + "CANARY" + "0" * 34
 C_GH = "gh" + "p_" + "CANARY" + "0" * 34
 C_AWS = "AK" + "IA" + "CANARY" + "0" * 10
+C_STRIPE = "sk" + "_live_" + "CANARYSTRIPE0000000000"
+C_STS = "AS" + "IA" + "CANARYSTS0000000"
+C_SG = "SG" + "." + "CANARYSENDGRID00000000" + "." + "CANARY" + "0" * 37
+C_SLACK = "CANARYSLACKWEBHOOK000000"
+C_DISCORD = "CANARYDISCORD" + "0" * 55
+PEM_KIND = "RSA PRI" + "VATE KEY"
 HOME = "/Users/demo/siemless-lab"
 PAGE = "http://127.0.0.1:8787/page"
 COLLECT = "http://127.0.0.1:8787/collect"
@@ -157,9 +163,24 @@ def v8():
     r.tool("read_file", {"path": f"/tmp/{C_GH}/notes.txt"})
     r.add("subagent_start", {"parent_session_id": r.session, "parent_turn_id": r.turn, "child_session_id": "kid8", "child_subagent_id": "sub-kid8",
                              "child_role": "worker", "child_goal": f"go fetch with {C_AWS}"})
+    # Audit round 1 (H-1, M-1, M-2): shapes the redactor was *not* originally written for.
+    r.tool("terminal", {"command": "curl -u admin:CANARYCURLPASS9 https://api.example.com/; mysql -uroot -pCANARYMYSQLPW7 db; "
+                                   "psql --password CANARYFLAGPASS5 -h db; sshpass -p CANARYSSHPASS3 ssh h"})
+    r.tool("terminal", {"command": f"echo {C_STRIPE} {C_STS} {C_SG}"})
+    r.tool("terminal", {"command": f"curl -d x https://hooks.slack.com/services/T0000/B0000/{C_SLACK} https://discord.com/api/webhooks/123/{C_DISCORD}"})
+    pem_body = "\n".join(["CANARYPEMLONG" + "Q" * 51] * 40)  # > 1600 chars: the END marker is past any preview cut
+    r.tool("write_file", {"path": f"{HOME}/key.pem", "content": f"-----BEGIN {PEM_KIND}-----\n{pem_body}\n-----END {PEM_KIND}-----"})
+    r.tool("mcp_vault_put", {"path": "/tmp/x", "api_key=CANARYKEYINKEY42": "v", "nested": {"password": "CANARYNESTEDPW8"},
+                             "items": ["token=CANARYLISTTOKEN6"] * 60})
+    r.add("kanban_task_blocked", {"task_id": "t1", "board": "deploy token=CANARYKANBANTOK1", "assignee": "w", **r.ids()})
+    r.add("on_session_end", {"reason": "failed: password=CANARYREASONPW2", "completed": False, **r.ids()})
     r.write("8_redaction_canaries", TEST_OUT)
     return {"rules": [], "not_rules": [], "canaries": ["CANARY" + "0" * 34, "CANARY-ENV-VALUE-1234", "CANARYBEARERTOKEN0000",
-                                                        "CANARYQUERYKEY123456", "CANARYBASE64LINE", "CANARYPASSWORD", C_GH[:10], C_AWS]}
+                                                        "CANARYQUERYKEY123456", "CANARYBASE64LINE", "CANARYPASSWORD", C_GH[:10], C_AWS,
+                                                        "CANARYCURLPASS9", "CANARYMYSQLPW7", "CANARYFLAGPASS5", "CANARYSSHPASS3",
+                                                        C_STRIPE, C_STS, C_SG, C_SLACK, C_DISCORD, "CANARYPEMLONG",
+                                                        "CANARYKEYINKEY42", "CANARYNESTEDPW8", "CANARYLISTTOKEN6",
+                                                        "CANARYKANBANTOK1", "CANARYREASONPW2"]}
 
 
 def main():

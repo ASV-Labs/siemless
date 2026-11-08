@@ -15,6 +15,7 @@ Visibility rules (see events.py):
 from __future__ import annotations
 
 import hashlib
+import re
 from typing import Any, Optional
 
 from . import sensitive as S
@@ -50,13 +51,17 @@ def _ids(p: dict) -> dict:
 
 
 def _s(v: Any) -> Optional[str]:
+    """Any scalar from a payload, as bounded, redacted text. Ids pass through unchanged in practice
+    (they never match a credential pattern); free text (reasons, board names, roles) is masked."""
     if v is None:
         return None
     try:
         s = str(v)
     except Exception:
         return None
-    return s[:200] if s else None
+    if not s:
+        return None
+    return redact_text(s[:400])[:200]
 
 
 def collect(hook: str, payload: dict, *, config: Optional[dict] = None) -> list[Event]:
@@ -164,12 +169,12 @@ def _tool_call(p: dict, cfg: dict) -> list[Event]:
     if cfg.get("record_args", True):
         attrs["args"] = bound_args(args, per_value=200, total=1500)
     else:
-        attrs["arg_names"] = sorted(str(k) for k in args.keys())[:32]
+        attrs["arg_names"] = sorted(redact_text(str(k))[:100] for k in list(args.keys())[:64])[:32]
 
     base = Event(kind="tool.call", tool=tool, outcome=status, attrs=attrs, **ids)
     out = [base]
     derived_vis = OBSERVED if ok else INFERRED  # a failed call proves intent, not effect
-    path = S.first_str(args, "path", "file_path", "filename", "file", "target")
+    path = S.first_str(args, "path", "file_path", "filepath", "filename", "file", "target", "source", "src", "destination", "dest")
     url = S.first_str(args, "url", "uri", "href")
     cmd = S.first_str(args, "command", "cmd", "code", "script")
 
@@ -235,16 +240,49 @@ def _tool_call(p: dict, cfg: dict) -> list[Event]:
         if action in MUTATING_SKILL_ACTIONS:
             out.append(Event(kind="skill.change", visibility=derived_vis, tool=tool, action=action, outcome=status,
                              target=preview(S.first_str(args, "name", "skill", "skill_name"), 80), tags=["config:hermes_skills"], **ids))
-    elif path:  # an unknown tool with a path argument still gets a path classification
+    elif path and _is_other_tool(tool):
+        # Any other tool (MCP servers, other plugins) that names a path: derive file/secret/config events
+        # from it like the built-in file tools, labelled inferred because the tool's semantics are unknown.
         tags = S.classify_path(path)
-        if tags:
+        if tags or S.is_untrusted_path(path):
             base.tags += tags
             base.target = redact_text(path)[:300]
+            action = "write" if _WRITE_TOOL_RE.search(tool) else "read"
+            derived = _file_event("file.write" if action == "write" else "file.read", action, path, INFERRED, tool, ids)
+            for e in derived:
+                e.tags.append("via:other_tool")
+            out += derived
+    if url and _is_other_tool(tool):
+        host = S.host_of(url)
+        if host:
+            out.append(Event(kind="net.egress", visibility=INFERRED, tool=tool, action="fetch", outcome=status, host=host,
+                             target=redact_text(url)[:300], tags=["egress:other_tool"] + S.classify_host(host), **ids))
+            out.append(Event(kind="content.untrusted", visibility=INFERRED, tool=tool, action="fetch", outcome=status,
+                             host=host, tags=["untrusted:other_tool"], **ids))
+    if isinstance(result, (str, bytes)) and any(e.kind == "content.untrusted" for e in out):
+        markers = S.injection_markers(result)
+        if markers:
+            for e in out:
+                if e.kind == "content.untrusted":
+                    e.tags.append("untrusted:injection_markers")
+                    e.attrs["injection_markers"] = markers
     return out
+
+
+def _is_other_tool(tool: str) -> bool:
+    """A tool SIEMless has no dedicated collector for (an MCP server, another plugin)."""
+    known = (S.FILE_READ_TOOLS | S.FILE_WRITE_TOOLS | S.EXEC_TOOLS | S.WEB_TOOLS | S.SEND_TOOLS | S.DELEGATE_TOOLS
+             | set(S.CRON_TOOLS) | set(S.SKILL_TOOLS))
+    return tool not in known and not tool.startswith(S.BROWSER_TOOLS_PREFIX)
+
+
+_WRITE_TOOL_RE = re.compile(r"(?i)(write|edit|patch|create|save|put|append|move|copy|upload|replace|update|delete|remove)")
 
 
 def _file_event(kind: str, action: str, path: str, vis: str, tool: str, ids: dict) -> list[Event]:
     tags = S.classify_path(path)
+    if S.is_template_path(path):
+        tags = [t for t in tags if not t.startswith("sensitive:")] + ["path:template"]
     target = redact_text(path)[:300]
     ev = Event(kind=kind, visibility=vis, tool=tool, action=action, target=target, tags=list(tags), **ids)
     out = [ev]
@@ -262,7 +300,8 @@ def _file_event(kind: str, action: str, path: str, vis: str, tool: str, ids: dic
     return out
 
 
-_WRITE_HINT = ("> ", ">>", " tee ", "sed -i", " cp ", " mv ", "install ", "ln -s", "cat >", "echo ", "printf ")
+_WRITE_HINT = ("> ", ">>", " tee ", "sed -i", " cp ", " mv ", "install ", "ln -s", "cat >", "echo ", "printf ",
+               "open(", ".write", "write_text", "writeFile", "rm ", "unlink", "truncate", "sqlite3 ")
 
 
 MAX_COMMAND_SCAN = 16_000  # characters of a command/script the classifiers look at (heredocs can be huge)
@@ -274,9 +313,10 @@ def _exec_events(cmd: str, tool: str, ids: dict, vis_ok: str) -> list[Event]:
     cmd = cmd[:MAX_COMMAND_SCAN]
     red = redact_text(cmd)
     cmd_tags = S.classify_command(cmd)
+    cmd = S.deobfuscate(cmd)
     tags = [t for t, _ in cmd_tags]
     sev = "info"
-    if any(t in tags for t in ("cmd:reverse_shell", "cmd:decode_exec", "cmd:download_exec", "cmd:inline_exec",
+    if any(t in tags for t in ("cmd:reverse_shell", "cmd:decode_exec", "cmd:download_exec", "cmd:inline_exec", "cmd:telemetry_tamper",
                                "cmd:keychain", "cmd:token_fetch", "cmd:browser_creds", "cmd:credential_archive", "cmd:log_tamper")):
         sev = "high"
     elif tags:
@@ -326,6 +366,10 @@ def _exec_events(cmd: str, tool: str, ids: dict, vis_ok: str) -> list[Event]:
     if "cmd:hermes_plugin" in tags:
         out.append(Event(kind="plugin.change", visibility=INFERRED, tool=tool, action="exec", target=ev.target, severity="medium",
                          tags=["config:hermes_plugins", "via:terminal"], **ids))
+    if "cmd:telemetry_tamper" in tags or "cmd:siemless_control" in tags:
+        out.append(Event(kind="config.change", visibility=INFERRED, tool=tool, action="exec", target=ev.target,
+                         severity="critical" if "cmd:telemetry_tamper" in tags else "high",
+                         tags=["config:siemless", "via:terminal"] + [t for t in tags if t in ("cmd:telemetry_tamper", "cmd:siemless_control")], **ids))
     if "cmd:hermes_security_config" in tags:
         out.append(Event(kind="config.change", visibility=INFERRED, tool=tool, action="exec", target=ev.target, severity="high",
                          tags=["config:hermes_config", "via:terminal"], **ids))
@@ -385,6 +429,9 @@ def _subagent_start(p: dict, cfg: dict) -> list[Event]:
                   attrs={k: v for k, v in attrs.items() if v is not None}, tags=["delegation"])]
 
 
+MAX_SUBAGENT_TARGETS = 64  # bounded on the agent thread whatever the child did
+
+
 def _subagent_stop(p: dict, cfg: dict) -> list[Event]:
     hist = p.get("tool_call_history") if isinstance(p.get("tool_call_history"), list) else []
     tools: dict[str, int] = {}
@@ -392,19 +439,25 @@ def _subagent_stop(p: dict, cfg: dict) -> list[Event]:
     for h in hist[:500]:
         if not isinstance(h, dict):
             continue
-        name = _s(h.get("tool") or h.get("tool_name") or h.get("name")) or "?"
+        raw = h.get("tool") or h.get("tool_name") or h.get("name")
+        name = str(raw)[:64] if raw is not None else "?"
         tools[name] = tools.get(name, 0) + 1
+        if len(targets) >= MAX_SUBAGENT_TARGETS:
+            continue
         for key in ("targets", "side_effect_targets", "side_effects"):
             v = h.get(key)
             if isinstance(v, (list, tuple)):
-                targets += [str(x)[:200] for x in v if x]
+                for x in v[:MAX_SUBAGENT_TARGETS]:
+                    if x and len(targets) < MAX_SUBAGENT_TARGETS:
+                        targets.append(str(x)[:200])
     tags = ["delegation"]
     sens = [t for t in targets if any(x.startswith("sensitive:") for x in S.classify_path(t))]
     if sens:
         tags.append("sensitive:subagent_targets")
     attrs = {"child_role": _s(p.get("child_role")), "status": _s(p.get("status") or p.get("child_status")),
              "duration_ms": p.get("duration_ms") if isinstance(p.get("duration_ms"), (int, float)) else None,
-             "tool_counts": dict(sorted(tools.items())[:32]), "targets": [redact_text(t) for t in targets[:16]],
+             "tool_counts": {redact_text(k): v for k, v in sorted(tools.items())[:32]}, "targets": [redact_text(t) for t in targets[:16]],
+             "tool_calls": sum(tools.values()),
              "summary_chars": len(p["child_summary"]) if isinstance(p.get("child_summary"), str) else None}
     outcome = _s(p.get("status") or p.get("child_status")) or "ok"
     sev = "medium" if sens else "info"

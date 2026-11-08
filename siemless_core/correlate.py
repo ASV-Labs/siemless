@@ -11,7 +11,6 @@ Sessions are never merged: a child subagent session is linked to its parent (so 
 
 from __future__ import annotations
 
-import time
 from collections import OrderedDict, deque
 from typing import Callable, Iterable, Optional
 
@@ -19,10 +18,14 @@ from .events import Event
 
 UNKNOWN_SESSION = "_unknown"
 
+SALIENT_KINDS = frozenset({"secret.access", "content.untrusted", "config.change", "net.egress", "process.exec",
+                           "file.read", "file.write", "skill.change", "plugin.change", "cron.change", "subagent.start",
+                           "subagent.stop", "approval.request", "approval.response"})
+
 
 class SessionState:
     __slots__ = ("session_id", "events", "seen", "parent_session_id", "children", "last_activity", "profile",
-                 "turn_ids", "hosts", "denies")
+                 "turn_ids", "hosts", "denies", "salient")
 
     def __init__(self, session_id: str, max_events: int):
         self.session_id = session_id
@@ -35,6 +38,9 @@ class SessionState:
         self.turn_ids: deque[str] = deque(maxlen=64)
         self.hosts: dict[str, int] = {}
         self.denies: deque[int] = deque(maxlen=64)
+        # Security-relevant events are kept in their own ring as well, so a flood of routine tool calls
+        # (todo, memory, llm turns) cannot evict the secret read a later egress needs to correlate with.
+        self.salient: deque[Event] = deque(maxlen=max(64, max_events // 4))
 
     def add(self, e: Event) -> bool:
         if e.id in self.seen:
@@ -43,6 +49,8 @@ class SessionState:
         while len(self.seen) > self.events.maxlen * 2:
             self.seen.popitem(last=False)
         self.events.append(e)
+        if e.kind in SALIENT_KINDS:
+            self.salient.append(e)
         self.last_activity = max(self.last_activity, e.time)
         if e.turn_id and (not self.turn_ids or self.turn_ids[-1] != e.turn_id):
             self.turn_ids.append(e.turn_id)
@@ -116,16 +124,20 @@ class Correlator:
         lo = before.time - win
         states = self.lineage(st) if include_parents else [st]
         out: list[Event] = []
+        seen: set[str] = set()
         for s in states:
-            for e in reversed(s.events):
-                if e.id == before.id:
-                    continue
-                if e.time > before.time:
-                    continue  # arrived early relative to the agent timeline
-                if e.time < lo:
-                    break
-                if e.kind in kinds and (predicate is None or predicate(e)):
-                    out.append(e)
+            # Both rings are bounded, so a full scan is cheap; no early break, because events can arrive
+            # out of timeline order (a late old event must not hide an in-window one behind it).
+            pools = (s.salient, s.events) if kinds <= SALIENT_KINDS else (s.events, s.salient)
+            for pool in pools:
+                for e in reversed(pool):
+                    if e.id == before.id or e.id in seen:
+                        continue
+                    if e.time > before.time or e.time < lo:
+                        continue
+                    if e.kind in kinds and (predicate is None or predicate(e)):
+                        seen.add(e.id)
+                        out.append(e)
         out.sort(key=lambda x: x.time, reverse=True)
         return out
 

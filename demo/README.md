@@ -52,7 +52,7 @@ for the pipeline demonstration and say so. Detection latency is measured, not cl
 
 ## Files
 
-- `lab/receiver.py` — the one local server (page, collector, Summit stand-in). Logs to `lab/out/`.
+- `lab/receiver.py` — the one local server (page, collector, Summit stand-in). Logs to `$SIEMLESS_DEMO_OUT` (default `$TMPDIR/siemless-demo`), never inside the plugin tree. Replays never reach it: replayed events stay on the machine-local exporters.
 - `lab/injection_page.html` — the page; `SIEMLESS_DEMO_HOME` is substituted with the fixture home.
 - `lab/fake_home/` — `.ssh/id_rsa` and `.env`, both canaries.
 - `fixtures/*.jsonl`, `fixtures/expected.json` — recorded variants 1–7; regenerate with `python3 demo/make_fixtures.py`

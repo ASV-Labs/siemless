@@ -11,7 +11,7 @@ import importlib
 import importlib.util
 import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
@@ -164,7 +164,7 @@ def replay(body: ReplayBody):
         rp = path.resolve()
     except OSError:
         raise HTTPException(status_code=400, detail="bad path")
-    if not any(str(rp).startswith(str(r.resolve())) for r in allowed_roots) or not rp.is_file():
+    if not any(rp.is_relative_to(r.resolve()) for r in allowed_roots) or not rp.is_file():
         raise HTTPException(status_code=400, detail="replay fixtures must live under the plugin's demo/ folder or its data dir")
     commands = importlib.import_module(f"{_CORE_NAME}.commands")
     r = commands.replay(p, rp)

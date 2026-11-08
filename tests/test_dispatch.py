@@ -89,7 +89,7 @@ def test_queue_never_blocks_and_drops_oldest(core, data_dir):
     assert d.queue_health()["dropped"] == 900
 
 
-def test_refused_destination_stops_retrying(core, data_dir):
+def test_refused_destination_spools_and_backs_off(core, data_dir):
     Dispatcher = mod(core, "dispatch").Dispatcher
     d = Dispatcher(spool_dir=data_dir / "spool", worker=False)
     ex = Refuser(core, 0)
@@ -98,7 +98,9 @@ def test_refused_destination_stops_retrying(core, data_dir):
     d.deliver(_events(core, 2))
     assert slot.state == "refused" and "401" in slot.last_error
     d.deliver(_events(core, 2))
-    assert slot.failed == 1 and slot.dropped == 4  # not retried; later batches counted as dropped
+    # Not hammered: one attempt, then the long backoff; events kept in the spool, nothing dropped.
+    assert slot.failed == 1 and slot.dropped == 0 and slot.spooled == 4
+    assert slot.next_retry - __import__("time").monotonic() > 200
 
 
 def test_remote_exporters_need_consent(core, data_dir):
@@ -148,7 +150,8 @@ def test_elastic_bulk_is_ndjson_create(core):
     ex._post = lambda body, headers: captured.update(body=body, headers=headers) or (200, b'{"errors":false}')
     ex.send(_events(core, 1))
     lines = captured["body"].decode().splitlines()
-    assert json.loads(lines[0]) == {"create": {"_index": "logs-siemless.hermes-default"}}
+    action = json.loads(lines[0])["create"]
+    assert action["_index"] == "logs-siemless.hermes-default" and action["_id"]  # _id = event id: retries never duplicate
     assert json.loads(lines[1])["event"]["category"] == ["file"]
     assert captured["headers"]["Content-Type"] == "application/x-ndjson"
     assert ex.url.endswith("/_bulk")

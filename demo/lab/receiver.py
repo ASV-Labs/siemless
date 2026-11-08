@@ -4,7 +4,7 @@
 * ``GET /page``       serves the injection page (demo/lab/injection_page.html) with the demo home
                       path substituted in, so the injected instruction names a real fixture file;
 * ``POST /collect``   the "attacker's" endpoint: records that something was posted (size and a
-                      SHA-256 of the body, never the body) to ``collect.log``;
+                      SHA-256 of the body, never the body) to ``collect.log`` under ``$SIEMLESS_DEMO_OUT`` (default ``$TMPDIR/siemless-demo``);
 * ``POST /ingest``    a stand-in for The Summit: accepts SIEMless's receiver contract
                       (``Authorization: Bearer <token>``; ``{"events": [...], "findings": [...]}``)
                       and appends to ``summit.log`` so the demo can show "the same finding on the wall".
@@ -19,6 +19,7 @@ import hashlib
 import json
 import os
 import sys
+import tempfile
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -30,7 +31,9 @@ TOKEN = os.environ.get("SIEMLESS_DEMO_TOKEN", "siemless-demo-token")
 class Handler(BaseHTTPRequestHandler):
     server_version = "siemless-demo/0.1"
     demo_home = str(HERE / "fake_home")
-    logs = HERE / "out"
+    # Logs live outside the plugin tree, so a packaged copy that ran the demo never ships them.
+    logs = Path(os.environ.get("SIEMLESS_DEMO_OUT") or (Path(tempfile.gettempdir()) / "siemless-demo"))
+    timeout = 10  # seconds per connection: a client that stalls cannot hold a handler thread
 
     def log_message(self, fmt, *args):  # quieter
         sys.stderr.write("[receiver] %s\n" % (fmt % args))
@@ -55,9 +58,14 @@ class Handler(BaseHTTPRequestHandler):
         return self._send(404, b'{"error":"not found"}')
 
     def do_POST(self):
-        n = int(self.headers.get("Content-Length") or 0)
-        body = self.rfile.read(min(n, 5 * 1024 * 1024))
-        self.logs.mkdir(exist_ok=True)
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            return self._send(400, b'{"error":"bad content-length"}')
+        if n < 0 or n > 5 * 1024 * 1024:
+            return self._send(413 if n > 0 else 400, b'{"error":"bad content-length"}')
+        body = self.rfile.read(n) if n else b""
+        self.logs.mkdir(parents=True, exist_ok=True, mode=0o700)
         if self.path.startswith("/collect"):
             rec = {"t": int(time.time() * 1000), "bytes": len(body), "sha256": hashlib.sha256(body).hexdigest()[:16],
                    "ua": self.headers.get("User-Agent", "")[:60]}
@@ -72,13 +80,20 @@ class Handler(BaseHTTPRequestHandler):
                 payload = json.loads(body.decode("utf-8"))
             except ValueError:
                 return self._send(400, b'{"error":"bad json"}')
+            if not isinstance(payload, dict):
+                return self._send(400, b'{"error":"body must be a JSON object"}')
+            findings = [f for f in (payload.get("findings") or []) if isinstance(f, dict)] if isinstance(payload.get("findings"), list) else []
+            events = payload.get("events") if isinstance(payload.get("events"), list) else []
             with open(self.logs / "summit.log", "a") as fh:
-                for f in payload.get("findings", []):
+                for f in findings:
+                    attack = [a.get("id") for a in (f.get("attack") or []) if isinstance(a, dict)] if isinstance(f.get("attack"), list) else []
                     fh.write(json.dumps({"t": int(time.time() * 1000), "rule": f.get("rule_id"), "severity": f.get("severity"),
                                          "confidence": f.get("confidence"), "title": f.get("title"), "session": f.get("session_id"),
-                                         "attack": [a.get("id") for a in f.get("attack", [])]}) + "\n")
-                    sys.stderr.write(f"[summit] {f.get('severity','?').upper():8} {f.get('rule_id')} {f.get('title')}\n")
-                fh.write(json.dumps({"t": int(time.time() * 1000), "events": len(payload.get("events", []))}) + "\n")
+                                         "replay": bool(f.get("replay")), "attack": attack}) + "\n")
+                    sev = str(f.get("severity") or "?").upper()
+                    tag = " [REPLAY]" if f.get("replay") else ""
+                    sys.stderr.write(f"[summit] {sev:8} {f.get('rule_id')} {f.get('title')}{tag}\n")
+                fh.write(json.dumps({"t": int(time.time() * 1000), "events": len(events)}) + "\n")
             return self._send(202, b'{"accepted":true}')
         return self._send(404, b'{"error":"not found"}')
 
@@ -92,6 +107,7 @@ def main() -> int:
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), Handler)
     print(f"siemless demo receiver on http://127.0.0.1:{a.port}  (page: /page, collector: /collect, summit stand-in: /ingest)")
     print(f"fixture home: {Handler.demo_home}")
+    print(f"logs: {Handler.logs}")
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
