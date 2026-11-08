@@ -9,8 +9,15 @@ import pytest
 
 from conftest import mod
 
-FIX = Path(__file__).resolve().parents[1] / "demo" / "fixtures"
-EXPECTED = json.loads((FIX / "expected.json").read_text())
+DEMO = Path(__file__).resolve().parents[1] / "demo" / "fixtures"
+TESTFIX = Path(__file__).resolve().parent / "fixtures"
+FIX = DEMO
+EXPECTED = {}
+WHERE = {}
+for d in (DEMO, TESTFIX):
+    for k, v in json.loads((d / "expected.json").read_text()).items():
+        EXPECTED[k] = v
+        WHERE[k] = d
 ORDER = ["info", "low", "medium", "high", "critical"]
 
 
@@ -20,7 +27,7 @@ def test_fixture(name, core, data_dir):
     cfg = mod(core, "config").load(overrides={"finding_cooldown_s": 0, "watch_private_hosts": True})
     p = Pipeline(cfg, data_dir=data_dir, worker=False, store=mod(core, "store").Store(data_dir / f"{name}.db"))
     try:
-        r = mod(core, "commands").replay(p, FIX / f"{name}.jsonl")
+        r = mod(core, "commands").replay(p, WHERE[name] / f"{name}.jsonl")
         exp = EXPECTED[name]
         got = {f["rule_id"] for f in r["findings"]}
         for rid in exp.get("rules", []):
@@ -41,7 +48,7 @@ def test_fixture(name, core, data_dir):
                 assert c not in blob, f"{name}: canary {c} leaked"
         assert r["replay"] is True and r["records"] > 0
         # replayed payloads are marked so nobody mistakes them for live telemetry
-        assert all(json.loads(l)["payload"].get("_replay") is None for l in (FIX / f"{name}.jsonl").read_text().splitlines())
+        assert all(json.loads(l)["payload"].get("_replay") is None for l in (WHERE[name] / f"{name}.jsonl").read_text().splitlines())
     finally:
         p.close()
 

@@ -21,7 +21,7 @@ const React = await import('react')
 const { act } = React
 const { createRoot } = await import('react-dom/client')
 const sdk = await import('@hermes/plugin-sdk')
-copyFileSync(fileURLToPath(new URL('../desktop/plugin.js', import.meta.url)), fileURLToPath(new URL('./.plugin-under-test.js', import.meta.url)))
+copyFileSync(fileURLToPath(new URL('../../desktop/plugin.js', import.meta.url)), fileURLToPath(new URL('./.plugin-under-test.js', import.meta.url)))
 const plugin = (await import('./.plugin-under-test.js')).default
 
 const restLog = []
@@ -57,7 +57,7 @@ test('contract: id, contributions, events, no app-markup reach', () => {
   assert.ok(sdk.calls.events['plugin.siemless.finding'] && sdk.calls.events['plugin.siemless.health'])
   ctx.contributions.find((c) => c.area === sdk.PALETTE_AREA).data.run()
   assert.deepEqual(sdk.calls.navigate, ['/siemless'])
-  const src = readFileSync(new URL('../desktop/plugin.js', import.meta.url), 'utf8')
+  const src = readFileSync(new URL('../../desktop/plugin.js', import.meta.url), 'utf8')
   assert.doesNotMatch(src, /document\.(querySelector|getElementsBy|getElementById)|data-slot|data-tour|data-sidebar|data-testid|MutationObserver|window\.hermesDesktop|dangerouslySetInnerHTML|\beval\(|new Function/)
 })
 

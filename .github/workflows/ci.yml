@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: "22"
       - run: node --check desktop/plugin.js
-      - run: cd tests-js && npm install --no-audit --no-fund && npm test
+      - run: cd tests/js && npm install --no-audit --no-fund && npm test
       - run: |
           # rule 8 in one line: no document.querySelector / app markup reach in the desktop half
           ! grep -nE "document\.(querySelector|getElementsBy|getElementById)|data-slot|data-tour|data-sidebar|data-testid|MutationObserver|window\.hermesDesktop|eval\(|new Function" desktop/plugin.js

@@ -19,7 +19,9 @@ hermes plugins install siemless
 ```
 
 > Hermes ≥ 0.21.5. Python standard library only; FastAPI (already in Hermes) for the Desktop
-> page's backend. `hermes plugins validate`: 0 desktop-surface refusals, 0 core overrides.
+> page's backend. Upstream `hermes plugins validate`: 16/16 checks pass; security scan *caution*
+> (see Disclosure); the one rule-9 warning is `tools/admission_lint.py`, a dev script the plugin
+> never imports.
 
 ## What you get
 
@@ -77,7 +79,7 @@ Hermes observer hooks ──▶ collect() ──▶ bounded queue ──▶ work
 * Rules read a correlation window (default 10 min) keyed on event *time*, so a late callback still
   joins what preceded it. Sessions are never merged; a subagent inherits its parent's taint.
 * Suppression: `allow_hosts`, `allow_paths`, `disable_rules`, and a per-rule dedupe cooldown.
-* Measured (`tools/bench.py`, this sandbox): a hook callback costs the agent thread ~0.4 ms at p50
+* Measured (`tests/bench.py`, this sandbox): a hook callback costs the agent thread ~0.4 ms at p50
   and under 1 ms at p95 whether the tool result is 1 KB or 1 MB; a 1 MB `write_file` argument costs
   ~0.3 ms (only the first few KB are scanned). Worker latency from event in to finding out is
   ~0.5 ms p50. Your numbers show in `/siemless status`.
@@ -95,7 +97,7 @@ Hermes observer hooks ──▶ collect() ──▶ bounded queue ──▶ work
 | SL-007 | Approval anomaly | 3 denials / 5 min, 6 prompts / 1 min, or a retry after a denial | behavioural |
 | SL-008 | Subagent outside parent scope | child does what the parent never did in the window | carries the action's mapping |
 | SL-009 | Suspicious command shape | decode-and-run, download-and-run, reverse shells, setuid, history tampering | T1059.004, T1027, T1140, T1105, T1070.003, T1690 |
-| SL-010 | Security configuration or instruction file changed | Hermes config/.env/hooks, approval mode, SOUL.md/AGENTS.md, shell rc, authorized_keys | T1685 / .007, T1546.004, T1098.004 |
+| SL-010 | Security configuration or instruction file changed | Hermes config/.env/hooks, approval mode, SOUL.md/AGENTS.md, shell rc, SSH authorized keys | T1685 / .007, T1546.004, T1098.004 |
 | SL-011 | Code published after sensitive access | git push / gh publish after a credential read | T1567.001 |
 | SL-012 | Data sent to a webhook or paste service | Discord/Slack webhooks, webhook.site, ngrok, pastebin, interact.sh … | T1567.004 / .003 |
 | SL-013 | Message or delegation after sensitive access | send_message or subagent spawn after a credential read | T1041 (approximate) |
@@ -186,9 +188,11 @@ demo is the replay.
 
 ```
 python -m pytest -q tests                       # 74 tests: rules, formats (OCSF validated against the 1.9.0 schema), dispatch, privacy canaries, API, demo variants, packs
+cd tests/js && npm install && npm test          # Desktop page rendered against real backend fixtures (tests/js/make_fixtures.py)
+python tests/bench.py                           # agent-thread cost and detection latency
 python tools/gen_sigma.py                       # regenerate the Sigma pack
 python tools/ocsf_check.py --schema <ocsf-schema checkout> --compile siemless_core/data/ocsf_required.json
-python tools/admission_lint.py <hermes-agent checkout>   # the static halves of `hermes plugins validate`
+python tools/admission_lint.py <hermes-agent checkout>   # upstream's own `hermes plugins validate` logic (needs ruamel.yaml + packaging)
 ```
 
 Research behind the shapes and mappings, with sources and what remains unverified:

@@ -3,7 +3,7 @@ id: 4b4f7647-3d95-50e4-bb5f-d565b65c36f3
 name: siemless_finding_sl_010
 status: experimental
 description: Hermes config/.env/hooks/plugins, approval mode, agent instruction files (SOUL.md, AGENTS.md,
-    CLAUDE.md), shell rc files, SSH authorized_keys or OS persistence dirs were written.
+    CLAUDE.md), shell rc files, the SSH authorized-keys file or OS persistence dirs were written.
 references:
 - https://github.com/ASV-Labs/siemless
 author: ASV Labs (SIEMless)

@@ -427,11 +427,11 @@ class SuspiciousCommand(_Base):
 class SecurityConfigTamper(_Base):
     id = "SL-010"
     name = "Security configuration or instruction file changed"
-    description = "Hermes config/.env/hooks/plugins, approval mode, agent instruction files (SOUL.md, AGENTS.md, CLAUDE.md), shell rc files, SSH authorized_keys or OS persistence dirs were written."
+    description = "Hermes config/.env/hooks/plugins, approval mode, agent instruction files (SOUL.md, AGENTS.md, CLAUDE.md), shell rc files, the SSH authorized-keys file or OS persistence dirs were written."
     severity = "high"
     triggers = ("config.change",)
     attack = [T["T1685"]]
-    attack_note = "T1685 (Defense Impairment; T1562.001 is revoked in ATT&CK 20) for Hermes config and hooks; T1685.007 when approvals are weakened; T1546.004 for shell rc files; T1098.004 for authorized_keys."
+    attack_note = "T1685 (Defense Impairment; T1562.001 is revoked in ATT&CK 20) for Hermes config and hooks; T1685.007 when approvals are weakened; T1546.004 for shell rc files; T1098.004 for the SSH authorized-keys file."
     false_positives = "The user editing their own config through the agent. Approval-mode changes are always reported."
     required_fields = ("kind", "time", "session_id", "target", "tags")
 

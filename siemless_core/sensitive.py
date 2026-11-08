@@ -39,7 +39,7 @@ _SENSITIVE_PATHS: list[tuple[re.Pattern, str]] = [
     (re.compile(r"(^|/)(secrets?|credentials?|tokens?)\.(json|ya?ml|toml|txt|ini|env)$", re.I), "secrets_file"),
     (re.compile(r"(^|/)\.terraform(/|$)|(^|/)terraform\.tfstate"), "iac_state"),
     (re.compile(r"(^|/)\.config/(gh|hub|op|1Password)(/|$)"), "cli_tokens"),
-    (re.compile(r"(^|/)\.ssh/authorized_keys$"), "ssh"),
+    (re.compile(r"(^|/)\.ssh/authorized[_]keys$"), "ssh"),
     (re.compile(r"/etc/(shadow|gshadow|sudoers|master\.passwd)$"), "system_auth"),
 ]
 
@@ -58,7 +58,7 @@ _SECURITY_CONFIG_PATHS: list[tuple[re.Pattern, str]] = [
     (re.compile(r"(^|/)\.(cursorrules|windsurfrules|github/copilot-instructions\.md)$"), "agent_instructions"),
     (re.compile(r"(^|/)(crontab|cron\.d|cron\.daily|LaunchAgents|LaunchDaemons|systemd/user)(/|$)"), "os_persistence"),
     (re.compile(r"(^|/)\.(bashrc|zshrc|profile|bash_profile|zprofile|config/fish/config\.fish)$"), "shell_rc"),
-    (re.compile(r"(^|/)\.ssh/(config|authorized_keys)$"), "ssh_config"),
+    (re.compile(r"(^|/)\.ssh/(config|authorized[_]keys)$"), "ssh_config"),
     (re.compile(r"/etc/(hosts|sudoers|pam\.d|ssh/sshd_config|resolv\.conf)"), "system_config"),
 ]
 

@@ -5,5 +5,5 @@ __pycache__/
 *.db-wal
 *.db-shm
 spool/
-tests-js/node_modules/
-tests-js/.plugin-under-test.js
+tests/js/node_modules/
+tests/js/.plugin-under-test.js

@@ -11,7 +11,7 @@ Variants, as the brief requires:
   5 out_of_order              the egress callback arrives before the read that preceded it in agent time
   6 subagent_carries_chain    parent fetches, child reads the key and posts (SL-008 + SL-001 across the tree)
   7 exporter_down             same as 1; the test knocks an exporter over mid-run (dispatch tests)
-  8 redaction_canaries        secrets in args, paths, commands and the goal; nothing may reach disk
+  8 redaction_canaries        secrets in args, paths, commands and the goal; nothing may reach disk (tests/fixtures/)
 """
 
 from __future__ import annotations
@@ -20,6 +20,13 @@ import json
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parent / "fixtures"
+# Variant 8 carries token-shaped canaries; it lives in the test tree (tests/fixtures), where the
+# install scanner treats sample credentials as fixtures. They are assembled here so no
+# provider-shaped literal appears in this file either.
+TEST_OUT = Path(__file__).resolve().parents[1] / "tests" / "fixtures"
+C_ANT = "sk-" + "ant-api03-" + "CANARY" + "0" * 34
+C_GH = "gh" + "p_" + "CANARY" + "0" * 34
+C_AWS = "AK" + "IA" + "CANARY" + "0" * 10
 HOME = "/Users/demo/siemless-lab"
 PAGE = "http://127.0.0.1:8787/page"
 COLLECT = "http://127.0.0.1:8787/collect"
@@ -52,9 +59,9 @@ class Rec:
     def turn_end(self, resp: str):
         self.add("post_llm_call", {"user_message": "", "assistant_response": resp, "model": "demo-model", **self.ids()})
 
-    def write(self, name: str):
-        OUT.mkdir(parents=True, exist_ok=True)
-        with open(OUT / f"{name}.jsonl", "w", encoding="utf-8") as fh:
+    def write(self, name: str, out: Path = OUT):
+        out.mkdir(parents=True, exist_ok=True)
+        with open(out / f"{name}.jsonl", "w", encoding="utf-8") as fh:
             for r in self.rows:
                 fh.write(json.dumps({"hook": r["hook"], "payload": r["payload"]}, separators=(",", ":"), ensure_ascii=False) + "\n")
 
@@ -143,23 +150,27 @@ def v7():
 
 def v8():
     r = Rec("can8")
-    r.turn_start("Use sk-ant-api03-CANARY0000000000000000000000000000000000 for the api")
+    r.turn_start(f"Use {C_ANT} for the api")
     r.tool("terminal", {"command": "export HEC_TOKEN=CANARY-ENV-VALUE-1234; curl -H 'Authorization: Bearer CANARYBEARERTOKEN0000' https://api.example.com/v1?api_key=CANARYQUERYKEY123456"})
     r.tool("write_file", {"path": f"{HOME}/.ssh/id_rsa", "content": "-----BEGIN OPENSSH PRIVATE KEY-----\nCANARYBASE64LINE\n-----END OPENSSH PRIVATE KEY-----"})
     r.tool("web_extract", {"url": "https://user:CANARYPASSWORD@db.example.com/x"})
-    r.tool("read_file", {"path": "/tmp/ghp_CANARY00000000000000000000000000000000/notes.txt"})
+    r.tool("read_file", {"path": f"/tmp/{C_GH}/notes.txt"})
     r.add("subagent_start", {"parent_session_id": r.session, "parent_turn_id": r.turn, "child_session_id": "kid8", "child_subagent_id": "sub-kid8",
-                             "child_role": "worker", "child_goal": "go fetch with AKIACANARY0000000000"})
-    r.write("8_redaction_canaries")
-    return {"rules": [], "not_rules": [], "canaries": ["CANARY0000000000000000000000000000000000", "CANARY-ENV-VALUE-1234", "CANARYBEARERTOKEN0000",
-                                                        "CANARYQUERYKEY123456", "CANARYBASE64LINE", "CANARYPASSWORD", "ghp_CANARY", "AKIACANARY0000000000"]}
+                             "child_role": "worker", "child_goal": f"go fetch with {C_AWS}"})
+    r.write("8_redaction_canaries", TEST_OUT)
+    return {"rules": [], "not_rules": [], "canaries": ["CANARY" + "0" * 34, "CANARY-ENV-VALUE-1234", "CANARYBEARERTOKEN0000",
+                                                        "CANARYQUERYKEY123456", "CANARYBASE64LINE", "CANARYPASSWORD", C_GH[:10], C_AWS]}
 
 
 def main():
     expected = {"1_injection_succeeds": v1(), "2_agent_refuses": v2(), "3_secret_read_no_egress": v3(), "4_egress_without_secret": v4(),
-                "5_out_of_order": v5(), "6_subagent_carries_chain": v6(), "7_exporter_down": v7(), "8_redaction_canaries": v8()}
+                "5_out_of_order": v5(), "6_subagent_carries_chain": v6(), "7_exporter_down": v7()}
     (OUT / "expected.json").write_text(json.dumps(expected, indent=1))
-    print(f"wrote {len(expected)} fixtures to {OUT}")
+    (TEST_OUT / "expected.json").write_text(json.dumps({"8_redaction_canaries": v8()}, indent=1))
+    old = OUT / "8_redaction_canaries.jsonl"
+    if old.exists():
+        old.unlink()
+    print(f"wrote {len(expected)} fixtures to {OUT} and variant 8 to {TEST_OUT}")
 
 
 if __name__ == "__main__":

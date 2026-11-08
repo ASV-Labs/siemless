@@ -3,12 +3,12 @@
  "version": "0.1.0",
  "profile": "demo",
  "hostname": "vm",
- "started_at": 1794118583257,
+ "started_at": 1794152357665,
  "processed": 13,
  "dropped_in": 0,
  "findings_total": 7,
- "last_event_at": 1794118583263,
- "last_finding_at": 1794118583263,
+ "last_event_at": 1794152357669,
+ "last_finding_at": 1794152357669,
  "events_24h": 20,
  "kinds_24h": {
   "content.untrusted": 1,
@@ -63,8 +63,8 @@
    "state": "idle",
    "remote": false,
    "format": "ocsf",
-   "events_path": "/tmp/tmpxpfwc4zw/events.jsonl",
-   "findings_path": "/tmp/tmpxpfwc4zw/findings.jsonl",
+   "events_path": "/tmp/tmp8u6u3iv_/events.jsonl",
+   "findings_path": "/tmp/tmp8u6u3iv_/findings.jsonl",
    "max_mb": 50
   }
  ],
@@ -74,8 +74,8 @@
  "db_bytes": 4096,
  "hosts_known": 1,
  "latency_ms": {
-  "p50": 0,
-  "p95": 1,
+  "p50": 0.35,
+  "p95": 0.57,
   "n": 7
  }
 }

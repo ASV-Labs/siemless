@@ -1,0 +1,16 @@
+{
+ "8_redaction_canaries": {
+  "rules": [],
+  "not_rules": [],
+  "canaries": [
+   "CANARY0000000000000000000000000000000000",
+   "CANARY-ENV-VALUE-1234",
+   "CANARYBEARERTOKEN0000",
+   "CANARYQUERYKEY123456",
+   "CANARYBASE64LINE",
+   "CANARYPASSWORD",
+   "ghp_CANARY",
+   "AKIACANARY0000000000"
+  ]
+ }
+}

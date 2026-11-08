@@ -14,7 +14,7 @@ hermes siemless replay demo/fixtures/1_injection_succeeds.jsonl
 
 Replays a recorded Hermes session through the real pipeline: collectors → correlation → rules →
 store → exporters. Output is labelled `[REPLAY, not live]`. All eight variants the brief asks for
-are in `demo/fixtures/` with `expected.json`; `tests/test_demo.py` checks every one.
+are recorded (1–7 in `demo/fixtures/`, 8 in `tests/fixtures/`) with `expected.json`; `tests/test_demo.py` checks every one.
 
 | Fixture | What it shows | Expect |
 |---|---|---|
@@ -25,7 +25,7 @@ are in `demo/fixtures/` with `expected.json`; `tests/test_demo.py` checks every 
 | 5_out_of_order | egress callback arrives before the read | SL-001 still fires |
 | 6_subagent_carries_chain | parent fetches, child reads and posts | SL-008, SL-001, SL-002 across the tree |
 | 7_exporter_down | as 1, with a destination dying mid-run | findings land locally, batch spools |
-| 8_redaction_canaries | secrets in every argument shape | zero canaries on disk |
+| 8_redaction_canaries (in `tests/fixtures/`) | token-shaped canaries in every argument shape | zero canaries on disk |
 
 ### B. Live (a real Hermes agent, a real injection)
 
@@ -55,4 +55,5 @@ for the pipeline demonstration and say so. Detection latency is measured, not cl
 - `lab/receiver.py` — the one local server (page, collector, Summit stand-in). Logs to `lab/out/`.
 - `lab/injection_page.html` — the page; `SIEMLESS_DEMO_HOME` is substituted with the fixture home.
 - `lab/fake_home/` — `.ssh/id_rsa` and `.env`, both canaries.
-- `fixtures/*.jsonl`, `fixtures/expected.json` — recorded variants; regenerate with `python3 demo/make_fixtures.py`.
+- `fixtures/*.jsonl`, `fixtures/expected.json` — recorded variants 1–7; regenerate with `python3 demo/make_fixtures.py`
+  (variant 8 carries token-shaped canaries and is written to `tests/fixtures/`, the test tree).

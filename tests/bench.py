@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Measure what a hook callback costs on the agent thread (collect + enqueue) and end-to-end
-hook→finding latency on the worker. Run: python tools/bench.py"""
+hook→finding latency on the worker. Run: python tests/bench.py"""
 from __future__ import annotations
 
 import importlib.util
