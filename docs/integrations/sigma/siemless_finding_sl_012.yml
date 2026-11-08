@@ -1,0 +1,27 @@
+title: 'SIEMless SL-012: Data sent to a webhook or paste service'
+id: ff4112f8-9595-526c-82e0-a135d1c8bd64
+name: siemless_finding_sl_012
+status: experimental
+description: A request to a webhook, tunnel, paste or OOB-interaction service (Discord/Slack webhooks,
+    webhook.site, ngrok, pastebin, interact.sh …).
+references:
+- https://github.com/ASV-Labs/siemless
+author: ASV Labs (SIEMless)
+date: '2026-11-08'
+logsource:
+    product: hermes
+    service: siemless
+    definition: SIEMless OCSF JSONL; field names are OCSF paths flattened with dots
+detection:
+    selection:
+        class_uid: 2004
+        metadata.product.name: SIEMless
+        unmapped.siemless.rule_id: SL-012
+    condition: selection
+falsepositives:
+- Teams that notify Slack from scripts. Allow-list your own webhook host; the finding is high only when
+    sensitive access preceded it (then SL-001 fires too).
+level: medium
+tags:
+- attack.t1567.004
+- attack.exfiltration

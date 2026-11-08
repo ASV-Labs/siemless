@@ -1,0 +1,26 @@
+title: 'SIEMless SL-008: Subagent acted outside its parent''s scope'
+id: ac9c392e-8ca4-5985-b478-9b040ddb7b13
+name: siemless_finding_sl_008
+status: experimental
+description: A delegated child session accessed credentials, reached an external host or changed configuration
+    when its parent had done none of those in the window.
+references:
+- https://github.com/ASV-Labs/siemless
+author: ASV Labs (SIEMless)
+date: '2026-11-08'
+logsource:
+    product: hermes
+    service: siemless
+    definition: SIEMless OCSF JSONL; field names are OCSF paths flattened with dots
+detection:
+    selection:
+        class_uid: 2004
+        metadata.product.name: SIEMless
+        unmapped.siemless.rule_id: SL-008
+    condition: selection
+falsepositives:
+- A parent that delegates 'deploy this' to a child that then legitimately reads credentials. Allow-list
+    paths/hosts for that workflow.
+level: high
+tags:
+- detection.threat-hunting

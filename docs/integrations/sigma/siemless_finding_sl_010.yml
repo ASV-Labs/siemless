@@ -1,0 +1,27 @@
+title: 'SIEMless SL-010: Security configuration or instruction file changed'
+id: 4b4f7647-3d95-50e4-bb5f-d565b65c36f3
+name: siemless_finding_sl_010
+status: experimental
+description: Hermes config/.env/hooks/plugins, approval mode, agent instruction files (SOUL.md, AGENTS.md,
+    CLAUDE.md), shell rc files, SSH authorized_keys or OS persistence dirs were written.
+references:
+- https://github.com/ASV-Labs/siemless
+author: ASV Labs (SIEMless)
+date: '2026-11-08'
+logsource:
+    product: hermes
+    service: siemless
+    definition: SIEMless OCSF JSONL; field names are OCSF paths flattened with dots
+detection:
+    selection:
+        class_uid: 2004
+        metadata.product.name: SIEMless
+        unmapped.siemless.rule_id: SL-010
+    condition: selection
+falsepositives:
+- The user editing their own config through the agent. Approval-mode changes are always reported.
+level: high
+tags:
+- attack.t1685
+- attack.defense-impairment
+- attack.defense-evasion

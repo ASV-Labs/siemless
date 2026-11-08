@@ -1,0 +1,28 @@
+status: experimental
+references:
+- https://github.com/ASV-Labs/siemless
+author: ASV Labs (SIEMless)
+date: '2026-11-08'
+logsource:
+    product: hermes
+    service: siemless
+    definition: SIEMless OCSF JSONL; field names are OCSF paths flattened with dots
+title: Hermes agent shell command reaches the network
+id: 045e452a-0769-5cb6-8e99-4d3042a352db
+name: siemless_raw_shell_egress
+description: A net.egress event derived from a terminal command (curl, wget, ssh, scp, nc …). Inferred
+    from command text.
+detection:
+    selection:
+        metadata.product.name: SIEMless
+        unmapped.siemless.kind: net.egress
+        unmapped.siemless.tags|contains: egress:shell
+    filter_dev:
+        unmapped.siemless.tags|contains: egress:dev
+    condition: selection and not filter_dev
+falsepositives:
+- Package installs and git operations to registries (filtered by egress:dev)
+level: low
+tags:
+- attack.t1071.001
+- attack.command-and-control

@@ -1,0 +1,25 @@
+status: experimental
+references:
+- https://github.com/ASV-Labs/siemless
+author: ASV Labs (SIEMless)
+date: '2026-11-08'
+logsource:
+    product: hermes
+    service: siemless
+    definition: SIEMless OCSF JSONL; field names are OCSF paths flattened with dots
+title: Hermes agent reached a webhook or paste service
+id: c1910720-1962-5742-a74c-7094c6818d73
+name: siemless_raw_webhook_egress
+description: Destination host is a known webhook, tunnel, paste or OOB-interaction service.
+detection:
+    selection:
+        metadata.product.name: SIEMless
+        unmapped.siemless.kind: net.egress
+        unmapped.siemless.tags|contains: egress:webhook
+    condition: selection
+falsepositives:
+- Teams that notify Slack or Discord from scripts
+level: medium
+tags:
+- attack.t1567.004
+- attack.exfiltration

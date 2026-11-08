@@ -1,0 +1,25 @@
+title: 'SIEMless SL-006: Plugin or skill set changed'
+id: e1829f13-d338-540a-b2b3-adb5998b1ff9
+name: siemless_finding_sl_006
+status: experimental
+description: A plugin was installed, enabled, disabled or removed, or a skill was created/installed —
+    the agent changing its own capabilities.
+references:
+- https://github.com/ASV-Labs/siemless
+author: ASV Labs (SIEMless)
+date: '2026-11-08'
+logsource:
+    product: hermes
+    service: siemless
+    definition: SIEMless OCSF JSONL; field names are OCSF paths flattened with dots
+detection:
+    selection:
+        class_uid: 2004
+        metadata.product.name: SIEMless
+        unmapped.siemless.rule_id: SL-006
+    condition: selection
+falsepositives:
+- Deliberate `hermes plugins install`. Low unless the session was tainted or the change came from a subagent.
+level: medium
+tags:
+- detection.threat-hunting

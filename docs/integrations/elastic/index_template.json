@@ -1,0 +1,37 @@
+{
+  "index_patterns": ["logs-siemless.hermes-*"],
+  "data_stream": {},
+  "priority": 200,
+  "template": {
+    "settings": {"index.mapping.total_fields.limit": 2000},
+    "mappings": {
+      "dynamic": true,
+      "properties": {
+        "@timestamp": {"type": "date"},
+        "ecs": {"properties": {"version": {"type": "keyword"}}},
+        "event": {"properties": {
+          "kind": {"type": "keyword"}, "category": {"type": "keyword"}, "type": {"type": "keyword"}, "action": {"type": "keyword"},
+          "id": {"type": "keyword"}, "dataset": {"type": "keyword"}, "module": {"type": "keyword"}, "severity": {"type": "long"},
+          "risk_score": {"type": "float"}, "outcome": {"type": "keyword"}, "provider": {"type": "keyword"}}},
+        "observer": {"properties": {"vendor": {"type": "keyword"}, "product": {"type": "keyword"}, "version": {"type": "keyword"}, "type": {"type": "keyword"}}},
+        "agent": {"properties": {"name": {"type": "keyword"}, "type": {"type": "keyword"}, "id": {"type": "keyword"}}},
+        "host": {"properties": {"name": {"type": "keyword"}}},
+        "trace": {"properties": {"id": {"type": "keyword"}}},
+        "transaction": {"properties": {"id": {"type": "keyword"}}},
+        "file": {"properties": {"path": {"type": "keyword", "ignore_above": 2048}, "name": {"type": "keyword"}}},
+        "process": {"properties": {"command_line": {"type": "wildcard"}, "name": {"type": "keyword"}}},
+        "destination": {"properties": {"domain": {"type": "keyword"}, "port": {"type": "long"}}},
+        "url": {"properties": {"full": {"type": "wildcard"}, "domain": {"type": "keyword"}}},
+        "related": {"properties": {"hosts": {"type": "keyword"}}},
+        "rule": {"properties": {"id": {"type": "keyword"}, "name": {"type": "keyword"}, "ruleset": {"type": "keyword"}}},
+        "threat": {"properties": {
+          "framework": {"type": "keyword"},
+          "technique": {"properties": {"id": {"type": "keyword"}, "name": {"type": "keyword"}, "reference": {"type": "keyword"}}},
+          "tactic": {"properties": {"id": {"type": "keyword"}, "name": {"type": "keyword"}}}}},
+        "labels": {"type": "object", "dynamic": true},
+        "tags": {"type": "keyword"},
+        "siemless": {"type": "flattened"}
+      }
+    }
+  }
+}

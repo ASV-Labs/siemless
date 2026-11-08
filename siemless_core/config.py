@@ -47,6 +47,7 @@ SCHEMA: dict[str, tuple[str, Any, str]] = {
     "elastic_url": ("str", "", "Elasticsearch base URL, e.g. https://es.example.com:9200. Documents are ECS. Key: SIEMLESS_ELASTIC_API_KEY."),
     "elastic_data_stream": ("str", "logs-siemless.hermes-default", "Elastic data stream name (default logs-siemless.hermes-default)."),
     "summit_url": ("str", "", "The Summit (or any receiver with the documented contract) endpoint. Token: SIEMLESS_SUMMIT_TOKEN."),
+    "allow_loopback_http": ("bool", False, "Lab switch: let summit_url be plain http:// on 127.0.0.1/localhost only (default false; https everywhere else)."),
     "http_ca_file": ("str", "", "PEM bundle for a private CA on the HEC / Elastic / Summit endpoints."),
     "hostname": ("str", "", "Host name to stamp on exported events (default: the machine's)."),
 }

@@ -1,0 +1,133 @@
+<!-- SIEMless rules for Wazuh. Drop into /var/ossec/etc/rules/siemless_rules.xml (or append to
+     local_rules.xml), restart wazuh-manager. Custom rule ids 100500-100599.
+
+     Input: the JSONL SIEMless writes (OCSF shape), read by the agent's <localfile> with
+     <log_format>json</log_format>. Wazuh's JSON decoder flattens nested objects with dots and does
+     NOT read arrays of objects, which is why SIEMless mirrors the attack ids, tags and rule id as
+     plain strings under unmapped.siemless.* — every field below is a scalar.
+
+     MITRE ids: <mitre> entries must exist in Wazuh's bundled ATT&CK database. T1698/T1700/T1685
+     (ATT&CK v20) may not be there yet on your version; Wazuh logs a warning and keeps the rule.
+     Test with: /var/ossec/bin/wazuh-logtest  (paste one line of findings.jsonl). -->
+<group name="siemless,hermes,ai_agent,ocsf,">
+
+  <!-- Any SIEMless event: the parent every other rule hangs off. Level 0 = indexed, not alerted. -->
+  <rule id="100500" level="0">
+    <decoded_as>json</decoded_as>
+    <field name="metadata.product.name">^SIEMless$</field>
+    <description>SIEMless: Hermes agent telemetry event</description>
+  </rule>
+
+  <!-- A SIEMless finding (OCSF Detection Finding 2004). Severity mapped from severity_id. -->
+  <rule id="100510" level="5">
+    <if_sid>100500</if_sid>
+    <field name="class_uid">^2004$</field>
+    <description>SIEMless finding $(unmapped.siemless.rule_id): $(finding_info.title)</description>
+    <group>siemless_finding,</group>
+  </rule>
+  <rule id="100511" level="7">
+    <if_sid>100510</if_sid>
+    <field name="severity_id">^3$</field>
+    <description>SIEMless medium finding $(unmapped.siemless.rule_id): $(finding_info.title)</description>
+  </rule>
+  <rule id="100512" level="10">
+    <if_sid>100510</if_sid>
+    <field name="severity_id">^4$</field>
+    <description>SIEMless HIGH finding $(unmapped.siemless.rule_id): $(finding_info.title) [session $(metadata.correlation_uid)]</description>
+  </rule>
+  <rule id="100513" level="13">
+    <if_sid>100510</if_sid>
+    <field name="severity_id">^5$</field>
+    <description>SIEMless CRITICAL finding $(unmapped.siemless.rule_id): $(finding_info.title) [session $(metadata.correlation_uid)]</description>
+  </rule>
+
+  <!-- Named findings, so dashboards and MITRE views line up. -->
+  <rule id="100520" level="12">
+    <if_sid>100510</if_sid>
+    <field name="unmapped.siemless.rule_id">^SL-001$</field>
+    <description>SIEMless SL-001: sensitive access followed by egress ($(finding_info.title))</description>
+    <mitre><id>T1552.001</id><id>T1567</id><id>T1700</id></mitre>
+    <group>exfiltration,</group>
+  </rule>
+  <rule id="100521" level="12">
+    <if_sid>100510</if_sid>
+    <field name="unmapped.siemless.rule_id">^SL-002$</field>
+    <description>SIEMless SL-002: untrusted content followed by sensitive action (indirect prompt injection)</description>
+    <mitre><id>T1698</id></mitre>
+    <group>prompt_injection,</group>
+  </rule>
+  <rule id="100522" level="7">
+    <if_sid>100510</if_sid>
+    <field name="unmapped.siemless.rule_id">^SL-003$</field>
+    <description>SIEMless SL-003: credential store targeted ($(finding_info.title))</description>
+    <mitre><id>T1552</id><id>T1555</id></mitre>
+    <group>credential_access,</group>
+  </rule>
+  <rule id="100525" level="9">
+    <if_sid>100510</if_sid>
+    <field name="unmapped.siemless.rule_id">^SL-005$</field>
+    <description>SIEMless SL-005: scheduled job or persistence created</description>
+    <mitre><id>T1053</id></mitre>
+    <group>persistence,</group>
+  </rule>
+  <rule id="100528" level="12">
+    <if_sid>100510</if_sid>
+    <field name="unmapped.siemless.rule_id">^SL-008$</field>
+    <description>SIEMless SL-008: subagent acted outside its parent's scope</description>
+  </rule>
+  <rule id="100529" level="12">
+    <if_sid>100510</if_sid>
+    <field name="unmapped.siemless.rule_id">^SL-009$</field>
+    <description>SIEMless SL-009: suspicious command shape ($(finding_info.title))</description>
+    <mitre><id>T1059.004</id><id>T1027</id><id>T1105</id></mitre>
+  </rule>
+  <rule id="100530" level="12">
+    <if_sid>100510</if_sid>
+    <field name="unmapped.siemless.rule_id">^SL-010$</field>
+    <description>SIEMless SL-010: agent governance file or approval mode changed</description>
+    <mitre><id>T1685</id><id>T1546.004</id></mitre>
+    <group>defense_impairment,</group>
+  </rule>
+  <rule id="100532" level="10">
+    <if_sid>100510</if_sid>
+    <field name="unmapped.siemless.rule_id">^SL-012$</field>
+    <description>SIEMless SL-012: data sent to a webhook or paste service</description>
+    <mitre><id>T1567.004</id></mitre>
+  </rule>
+
+  <!-- Raw events worth their own alert even without a finding. -->
+  <rule id="100540" level="6">
+    <if_sid>100500</if_sid>
+    <field name="unmapped.siemless.kind">^secret\.access$</field>
+    <description>SIEMless: agent targeted a credential store: $(file.path)</description>
+    <mitre><id>T1552</id></mitre>
+  </rule>
+  <rule id="100541" level="8">
+    <if_sid>100500</if_sid>
+    <field name="unmapped.siemless.kind">^config\.change$</field>
+    <field name="unmapped.siemless.tags">config:approvals|config:hermes_config|config:hermes_env|config:hermes_hooks</field>
+    <description>SIEMless: agent changed its own security configuration: $(file.path)</description>
+    <mitre><id>T1685</id></mitre>
+  </rule>
+  <rule id="100542" level="6">
+    <if_sid>100500</if_sid>
+    <field name="unmapped.siemless.kind">^approval\.response$</field>
+    <field name="unmapped.siemless.outcome">^denied$</field>
+    <description>SIEMless: user denied an agent action: $(message)</description>
+  </rule>
+  <rule id="100543" level="8">
+    <if_sid>100500</if_sid>
+    <field name="unmapped.siemless.kind">^net\.egress$</field>
+    <field name="unmapped.siemless.tags">egress:webhook</field>
+    <description>SIEMless: agent reached a webhook/paste host $(dst_endpoint.hostname)</description>
+    <mitre><id>T1567.004</id></mitre>
+  </rule>
+
+  <!-- Frequency: three denials in five minutes from one session (Wazuh-side correlation, independent of SL-007). -->
+  <rule id="100550" level="10" frequency="3" timeframe="300">
+    <if_matched_sid>100542</if_matched_sid>
+    <same_field>metadata.correlation_uid</same_field>
+    <description>SIEMless: repeated denials in one Hermes session</description>
+  </rule>
+
+</group>

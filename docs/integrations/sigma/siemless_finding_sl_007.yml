@@ -1,0 +1,25 @@
+title: 'SIEMless SL-007: Approval anomaly'
+id: b0e740c4-037b-5af1-b8de-2c8c98603458
+name: siemless_finding_sl_007
+status: experimental
+description: Repeated denials, an approval burst, or a tool call that retried the same approval pattern
+    right after a denial.
+references:
+- https://github.com/ASV-Labs/siemless
+author: ASV Labs (SIEMless)
+date: '2026-11-08'
+logsource:
+    product: hermes
+    service: siemless
+    definition: SIEMless OCSF JSONL; field names are OCSF paths flattened with dots
+detection:
+    selection:
+        class_uid: 2004
+        metadata.product.name: SIEMless
+        unmapped.siemless.rule_id: SL-007
+    condition: selection
+falsepositives:
+- A user denying several unrelated prompts in a row. Threshold is configurable (approval_denies, approval_burst).
+level: medium
+tags:
+- detection.threat-hunting

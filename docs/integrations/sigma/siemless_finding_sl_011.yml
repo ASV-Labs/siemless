@@ -1,0 +1,26 @@
+title: 'SIEMless SL-011: Code published after sensitive access'
+id: 007bb9a3-c52f-537e-be54-473fcb0722e8
+name: siemless_finding_sl_011
+status: experimental
+description: git push, a remote change, or a GitHub CLI publish happened in a session that had touched
+    a credential store or a .env file.
+references:
+- https://github.com/ASV-Labs/siemless
+author: ASV Labs (SIEMless)
+date: '2026-11-08'
+logsource:
+    product: hermes
+    service: siemless
+    definition: SIEMless OCSF JSONL; field names are OCSF paths flattened with dots
+detection:
+    selection:
+        class_uid: 2004
+        metadata.product.name: SIEMless
+        unmapped.siemless.rule_id: SL-011
+    condition: selection
+falsepositives:
+- Normal development after editing .env.example. Allow-list .env.example / templates.
+level: medium
+tags:
+- attack.t1567.001
+- attack.exfiltration

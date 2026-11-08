@@ -90,7 +90,8 @@ class Pipeline:
         if cfg.get("summit_url"):
             try:
                 self.dispatcher.add(SummitExporter({"url": cfg["summit_url"], "ca_file": cfg.get("http_ca_file") or None,
-                                                    "hostname": self.hostname, "agent": self.profile or "hermes"},
+                                                    "hostname": self.hostname, "agent": self.profile or "hermes",
+                                                    "allow_loopback_http": bool(cfg.get("allow_loopback_http"))},
                                                    finding_lookup=self.store.finding), state=remote_state)
             except ValueError as exc:
                 log.warning("siemless: summit exporter not started: %s", exc)

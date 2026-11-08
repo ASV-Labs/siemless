@@ -1,0 +1,22 @@
+status: experimental
+references:
+- https://github.com/ASV-Labs/siemless
+author: ASV Labs (SIEMless)
+date: '2026-11-08'
+logsource:
+    product: hermes
+    service: siemless
+    definition: SIEMless OCSF JSONL; field names are OCSF paths flattened with dots
+title: Hermes agent spawned a subagent
+id: 7e80de9d-5a2d-5d2a-8839-63ca62b0188a
+name: siemless_raw_subagent_start
+description: 'subagent.start: delegated work began. Used by the correlation rules.'
+detection:
+    selection:
+        metadata.product.name: SIEMless
+        unmapped.siemless.kind: subagent.start
+    condition: selection
+falsepositives:
+- Normal use
+level: informational
+tags: []

@@ -1,0 +1,27 @@
+title: 'SIEMless SL-013: Message or delegation after sensitive access'
+id: 6ef271f7-ab7f-59f5-acd4-8f09784ecc06
+name: siemless_finding_sl_013
+status: experimental
+description: 'A send_message / kanban comment, or a subagent spawn, followed a credential access: data
+    moving between agents or out through a chat channel.'
+references:
+- https://github.com/ASV-Labs/siemless
+author: ASV Labs (SIEMless)
+date: '2026-11-08'
+logsource:
+    product: hermes
+    service: siemless
+    definition: SIEMless OCSF JSONL; field names are OCSF paths flattened with dots
+detection:
+    selection:
+        class_uid: 2004
+        metadata.product.name: SIEMless
+        unmapped.siemless.rule_id: SL-013
+    condition: selection
+falsepositives:
+- Status updates to the owner after a deploy. Low unless the message is large or goes to a channel the
+    session had not used.
+level: medium
+tags:
+- attack.t1041
+- attack.exfiltration

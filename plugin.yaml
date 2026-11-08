@@ -184,6 +184,11 @@ config_schema:
     type: str
     default: ''
     description: 'The Summit (or any receiver with the documented contract) endpoint. Token: SIEMLESS_SUMMIT_TOKEN.'
+  allow_loopback_http:
+    type: bool
+    default: false
+    description: 'Lab switch: let summit_url be plain http:// on 127.0.0.1/localhost only (default false; https
+      everywhere else).'
   http_ca_file:
     type: str
     default: ''

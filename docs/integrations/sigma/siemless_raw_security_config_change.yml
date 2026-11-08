@@ -1,0 +1,26 @@
+status: experimental
+references:
+- https://github.com/ASV-Labs/siemless
+author: ASV Labs (SIEMless)
+date: '2026-11-08'
+logsource:
+    product: hermes
+    service: siemless
+    definition: SIEMless OCSF JSONL; field names are OCSF paths flattened with dots
+title: Hermes agent changed its own security configuration
+id: b62a8355-b4c8-5e7f-bd52-46a762c82c81
+name: siemless_raw_security_config_change
+description: config.change on Hermes config, .env, hooks, plugins, approval mode or an agent instruction
+    file.
+detection:
+    selection:
+        metadata.product.name: SIEMless
+        unmapped.siemless.kind: config.change
+    condition: selection
+falsepositives:
+- The owner editing config through the agent
+level: high
+tags:
+- attack.t1685
+- attack.defense-impairment
+- attack.defense-evasion

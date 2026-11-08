@@ -1,0 +1,29 @@
+title: 'SIEMless SL-004: First-seen destination near sensitive activity'
+id: 71be62d8-ad98-5cc2-af12-ac22a5ef38b7
+name: siemless_finding_sl_004
+status: experimental
+description: The session reached a host this profile has never contacted before, within the window of
+    a credential access, a config change or an untrusted fetch.
+references:
+- https://github.com/ASV-Labs/siemless
+author: ASV Labs (SIEMless)
+date: '2026-11-08'
+logsource:
+    product: hermes
+    service: siemless
+    definition: SIEMless OCSF JSONL; field names are OCSF paths flattened with dots
+detection:
+    selection:
+        class_uid: 2004
+        metadata.product.name: SIEMless
+        unmapped.siemless.rule_id: SL-004
+    condition: selection
+falsepositives:
+- The first day on a new project is all first-seen hosts. Seed the baseline by running normally for a
+    while; allow-list your SaaS.
+level: medium
+tags:
+- attack.t1071.001
+- attack.command-and-control
+- attack.t1567
+- attack.exfiltration

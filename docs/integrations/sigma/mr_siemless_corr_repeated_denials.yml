@@ -1,0 +1,18 @@
+title: Three denied approvals in one Hermes session
+id: d1706608-b8e8-5198-9407-f34961e3c05a
+name: siemless_corr_repeated_denials
+status: experimental
+author: ASV Labs (SIEMless)
+date: '2026-11-08'
+description: 'SIEM-side reconstruction of SL-007: the user denied three prompts within five minutes.'
+correlation:
+    type: event_count
+    rules:
+    - siemless_raw_approval_denied
+    group-by:
+    - metadata.correlation_uid
+    timespan: 5m
+    condition:
+        gte: 3
+level: medium
+tags: []

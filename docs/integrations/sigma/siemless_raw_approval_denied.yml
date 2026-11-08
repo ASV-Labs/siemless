@@ -1,0 +1,23 @@
+status: experimental
+references:
+- https://github.com/ASV-Labs/siemless
+author: ASV Labs (SIEMless)
+date: '2026-11-08'
+logsource:
+    product: hermes
+    service: siemless
+    definition: SIEMless OCSF JSONL; field names are OCSF paths flattened with dots
+title: Hermes approval denied
+id: 18146609-bf2e-5973-810e-f182f2829f9b
+name: siemless_raw_approval_denied
+description: The user denied a dangerous-command approval prompt.
+detection:
+    selection:
+        metadata.product.name: SIEMless
+        unmapped.siemless.kind: approval.response
+        unmapped.siemless.outcome: denied
+    condition: selection
+falsepositives:
+- Normal use
+level: informational
+tags: []
