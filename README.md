@@ -77,6 +77,10 @@ Hermes observer hooks ──▶ collect() ──▶ bounded queue ──▶ work
 * Rules read a correlation window (default 10 min) keyed on event *time*, so a late callback still
   joins what preceded it. Sessions are never merged; a subagent inherits its parent's taint.
 * Suppression: `allow_hosts`, `allow_paths`, `disable_rules`, and a per-rule dedupe cooldown.
+* Measured (`tools/bench.py`, this sandbox): a hook callback costs the agent thread ~0.4 ms at p50
+  and under 1 ms at p95 whether the tool result is 1 KB or 1 MB; a 1 MB `write_file` argument costs
+  ~0.3 ms (only the first few KB are scanned). Worker latency from event in to finding out is
+  ~0.5 ms p50. Your numbers show in `/siemless status`.
 
 ## The rules
 

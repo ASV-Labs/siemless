@@ -149,6 +149,11 @@ def preview(text: Any, limit: int = 240) -> str:
             text = str(text)
         except Exception:
             return ""
+    # Redact only what can end up in the preview: a 1 MB argument must not cost the agent thread a
+    # regex pass over 1 MB (measured: ~120 ms). A secret straddling the cut is masked by the prefix
+    # patterns on whichever side keeps its start; the tail is dropped anyway.
+    if len(text) > limit * 8:
+        text = text[: limit * 8]
     text = redact_text(text)
     text = " ".join(text.split())
     if len(text) > limit:

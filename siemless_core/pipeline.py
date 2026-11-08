@@ -49,7 +49,7 @@ class Pipeline:
         self.last_event_at: Optional[int] = None
         self.last_finding_at: Optional[int] = None
         self.started_at = int(time.time() * 1000)
-        self.latency_ms: list[int] = []  # last 100 hook→finding latencies
+        self.latency_ms: list[float] = []  # last 100 worker latencies, event in → finding out, ms
         self.dispatcher = Dispatcher(spool_dir=self.data_dir / "spool", queue_size=int(self.config["queue_size"]),
                                      spool_max_mb=float(self.config["spool_max_mb"]), on_health=self._save_health, worker=worker)
         self._build_exporters()
@@ -171,7 +171,7 @@ class Pipeline:
                 out.append(fd)
                 self.findings_total += 1
                 self.last_finding_at = fd["detected_at"]
-                self.latency_ms.append(int((time.monotonic() - t0) * 1000))
+                self.latency_ms.append(round((time.monotonic() - t0) * 1000, 2))
                 if len(self.latency_ms) > 100:
                     self.latency_ms.pop(0)
                 self.emit("finding", fd)
@@ -234,7 +234,7 @@ class Pipeline:
         self.dispatcher.stop()
 
 
-def _pct(xs: list[int], p: int) -> Optional[int]:
+def _pct(xs: list[float], p: int) -> Optional[float]:
     if not xs:
         return None
     s = sorted(xs)

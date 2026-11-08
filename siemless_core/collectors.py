@@ -265,8 +265,13 @@ def _file_event(kind: str, action: str, path: str, vis: str, tool: str, ids: dic
 _WRITE_HINT = ("> ", ">>", " tee ", "sed -i", " cp ", " mv ", "install ", "ln -s", "cat >", "echo ", "printf ")
 
 
+MAX_COMMAND_SCAN = 16_000  # characters of a command/script the classifiers look at (heredocs can be huge)
+
+
 def _exec_events(cmd: str, tool: str, ids: dict, vis_ok: str) -> list[Event]:
     """A terminal/execute_code call: one process.exec plus whatever the command text implies."""
+    full_len = len(cmd)
+    cmd = cmd[:MAX_COMMAND_SCAN]
     red = redact_text(cmd)
     cmd_tags = S.classify_command(cmd)
     tags = [t for t, _ in cmd_tags]
@@ -277,7 +282,8 @@ def _exec_events(cmd: str, tool: str, ids: dict, vis_ok: str) -> list[Event]:
     elif tags:
         sev = "medium"
     ev = Event(kind="process.exec", visibility=INFERRED, tool=tool, action="exec", target=S.command_preview(red, 200),
-               severity=sev, attrs={"command_sha": _h(cmd), "command_chars": len(cmd), "reasons": [r for _, r in cmd_tags][:8]},
+               severity=sev, attrs={"command_sha": _h(cmd), "command_chars": full_len, "reasons": [r for _, r in cmd_tags][:8],
+                                    **({"command_truncated_for_scan": True} if full_len > MAX_COMMAND_SCAN else {})},
                tags=tags, **ids)
     out = [ev]
 
