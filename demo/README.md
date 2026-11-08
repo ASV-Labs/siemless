@@ -40,7 +40,8 @@ are recorded (1–7 in `demo/fixtures/`, 8 in `tests/fixtures/`) with `expected.
    makes the loopback collector count as egress; `allow_loopback_http` lets the Summit stand-in be
    plain HTTP on 127.0.0.1 only. Both are off by default and documented as lab switches.)
 2. Start the receiver: `python3 demo/lab/receiver.py` (page on `/page`, collector on `/collect`,
-   Summit stand-in on `/ingest`).
+   Summit stand-in on `/ingest`). If 8787 is taken, pass `--port N` and use N in `summit_url` and the
+   prompt below; the page names the collector on whichever port the receiver is on.
 3. Ask Hermes: *"Summarise http://127.0.0.1:8787/page for me."*
 4. Watch `/siemless findings`, the SIEMless Desktop page, and the receiver's log.
 

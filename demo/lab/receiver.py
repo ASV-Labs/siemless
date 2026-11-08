@@ -31,6 +31,7 @@ TOKEN = os.environ.get("SIEMLESS_DEMO_TOKEN", "siemless-demo-token")
 class Handler(BaseHTTPRequestHandler):
     server_version = "siemless-demo/0.1"
     demo_home = str(HERE / "fake_home")
+    demo_port = 8787
     # Logs live outside the plugin tree, so a packaged copy that ran the demo never ships them.
     logs = Path(os.environ.get("SIEMLESS_DEMO_OUT") or (Path(tempfile.gettempdir()) / "siemless-demo"))
     timeout = 10  # seconds per connection: a client that stalls cannot hold a handler thread
@@ -47,7 +48,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path.startswith("/page"):
-            html = (HERE / "injection_page.html").read_text(encoding="utf-8").replace("SIEMLESS_DEMO_HOME", self.demo_home)
+            html = (HERE / "injection_page.html").read_text(encoding="utf-8").replace("SIEMLESS_DEMO_HOME", self.demo_home).replace("SIEMLESS_DEMO_PORT", str(self.demo_port))
             return self._send(200, html.encode("utf-8"), "text/html; charset=utf-8")
         if self.path.startswith("/summit"):
             lines = (self.logs / "summit.log").read_text().splitlines() if (self.logs / "summit.log").exists() else []
@@ -104,6 +105,7 @@ def main() -> int:
     ap.add_argument("--home", default=str(HERE / "fake_home"), help="the fixture home the injection names")
     a = ap.parse_args()
     Handler.demo_home = str(Path(a.home).resolve())
+    Handler.demo_port = a.port
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), Handler)
     print(f"siemless demo receiver on http://127.0.0.1:{a.port}  (page: /page, collector: /collect, summit stand-in: /ingest)")
     print(f"fixture home: {Handler.demo_home}")
