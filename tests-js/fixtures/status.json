@@ -1,0 +1,81 @@
+{
+ "plugin": "siemless",
+ "version": "0.1.0",
+ "profile": "demo",
+ "hostname": "vm",
+ "started_at": 1794118583257,
+ "processed": 13,
+ "dropped_in": 0,
+ "findings_total": 7,
+ "last_event_at": 1794118583263,
+ "last_finding_at": 1794118583263,
+ "events_24h": 20,
+ "kinds_24h": {
+  "content.untrusted": 1,
+  "file.read": 1,
+  "finding": 7,
+  "net.egress": 2,
+  "process.exec": 1,
+  "secret.access": 2,
+  "subagent.start": 1,
+  "subagent.stop": 1,
+  "tool.call": 3,
+  "turn.start": 1
+ },
+ "findings_24h": {
+  "high": 5,
+  "medium": 2
+ },
+ "rules_24h": {
+  "SL-001": 1,
+  "SL-002": 2,
+  "SL-003": 2,
+  "SL-008": 2
+ },
+ "rules": {
+  "enabled": 14,
+  "evaluations": 28,
+  "suppressed": 0
+ },
+ "correlator": {
+  "sessions": 2,
+  "events": 20,
+  "window_ms": 600000
+ },
+ "queue": {
+  "size": 15,
+  "capacity": 10000,
+  "received": 15,
+  "dropped": 0,
+  "worker_alive": false
+ },
+ "exporters": [
+  {
+   "name": "jsonl",
+   "enabled": true,
+   "sent": 0,
+   "failed": 0,
+   "dropped": 0,
+   "spooled": 0,
+   "last_ok": null,
+   "last_error_at": null,
+   "last_error": null,
+   "state": "idle",
+   "remote": false,
+   "format": "ocsf",
+   "events_path": "/tmp/tmpxpfwc4zw/events.jsonl",
+   "findings_path": "/tmp/tmpxpfwc4zw/findings.jsonl",
+   "max_mb": 50
+  }
+ ],
+ "live": false,
+ "export_scope": "security",
+ "remote_export": false,
+ "db_bytes": 4096,
+ "hosts_known": 1,
+ "latency_ms": {
+  "p50": 0,
+  "p95": 1,
+  "n": 7
+ }
+}

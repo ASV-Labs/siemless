@@ -1,0 +1,321 @@
+{
+ "rules": [
+  {
+   "id": "SL-001",
+   "name": "Sensitive access followed by egress",
+   "severity": "high",
+   "triggers": [
+    "net.egress"
+   ],
+   "attack": [
+    "T1552.001",
+    "T1567",
+    "T1700"
+   ],
+   "attack_note": "T1700 is attached because the actor is an AI agent; T1567.004 replaces T1567 when the host is a known webhook/paste service.",
+   "description": "A credential store or key file was targeted, then within the window the same session (or its subagent) reached an external destination. The classic exfiltration shape.",
+   "false_positives": "Legitimate deploys: reading ~/.aws/credentials then calling AWS; git push after touching .env. Allow-list the hosts you deploy to, or the paths your workflow reads.",
+   "required_fields": [
+    "kind",
+    "time",
+    "session_id",
+    "host",
+    "tags",
+    "target"
+   ],
+   "enabled": true
+  },
+  {
+   "id": "SL-002",
+   "name": "Untrusted content followed by sensitive action",
+   "severity": "high",
+   "triggers": [
+    "secret.access",
+    "net.egress",
+    "config.change",
+    "cron.change",
+    "plugin.change"
+   ],
+   "attack": [
+    "T1698"
+   ],
+   "attack_note": "Attached to the *downstream* action, not to the fetch: reading a web page is not an attack.",
+   "description": "Content from outside the trust boundary (a web page, search result, browser page or downloaded file) entered the context, and within the window the agent targeted a credential store, reached a new destination, changed its own configuration or scheduled a job. The indirect prompt-injection shape.",
+   "false_positives": "Research tasks that fetch docs and then edit config on purpose. The finding is medium when the downstream action is only a new destination, high when it is credential access or a governance change.",
+   "required_fields": [
+    "kind",
+    "time",
+    "session_id",
+    "tags"
+   ],
+   "enabled": true
+  },
+  {
+   "id": "SL-003",
+   "name": "Credential discovery",
+   "severity": "medium",
+   "triggers": [
+    "secret.access"
+   ],
+   "attack": [
+    "T1552",
+    "T1555"
+   ],
+   "attack_note": "Refined per store: T1552.004 for private keys, T1555.001 for the macOS keychain, T1555.003 for browser stores.",
+   "description": "A tool call or command targeted a credential store: SSH keys, cloud credentials, .env files, keychains, browser logins, token-fetching CLIs.",
+   "false_positives": "Developers ask agents to fix their .env and ssh config. Severity is low for a single read with no follow-on; SL-001 and SL-002 cover the follow-on.",
+   "required_fields": [
+    "kind",
+    "time",
+    "session_id",
+    "target",
+    "tags"
+   ],
+   "enabled": true
+  },
+  {
+   "id": "SL-004",
+   "name": "First-seen destination near sensitive activity",
+   "severity": "medium",
+   "triggers": [
+    "net.egress"
+   ],
+   "attack": [
+    "T1071.001",
+    "T1567"
+   ],
+   "attack_note": null,
+   "description": "The session reached a host this profile has never contacted before, within the window of a credential access, a config change or an untrusted fetch.",
+   "false_positives": "The first day on a new project is all first-seen hosts. Seed the baseline by running normally for a while; allow-list your SaaS.",
+   "required_fields": [
+    "kind",
+    "time",
+    "session_id",
+    "host"
+   ],
+   "enabled": true
+  },
+  {
+   "id": "SL-005",
+   "name": "Scheduled job or persistence created",
+   "severity": "medium",
+   "triggers": [
+    "cron.change"
+   ],
+   "attack": [
+    "T1053"
+   ],
+   "attack_note": "T1053.003 (Cron) when the mechanism is crontab or a Hermes cron job.",
+   "description": "A Hermes cron job was created or changed, or a shell command installed OS-level persistence (crontab, launchctl, systemd, schtasks).",
+   "false_positives": "Users ask for scheduled jobs. The finding is low when the user turn is the direct parent; high when the session was tainted.",
+   "required_fields": [
+    "kind",
+    "time",
+    "session_id",
+    "target",
+    "tags"
+   ],
+   "enabled": true
+  },
+  {
+   "id": "SL-006",
+   "name": "Plugin or skill set changed",
+   "severity": "medium",
+   "triggers": [
+    "plugin.change",
+    "skill.change"
+   ],
+   "attack": [],
+   "attack_note": "No exact ATT&CK technique: extending an agent's own toolset is closest to T1195 (Supply Chain Compromise) only when the source is untrusted, which this rule cannot see.",
+   "description": "A plugin was installed, enabled, disabled or removed, or a skill was created/installed \u2014 the agent changing its own capabilities.",
+   "false_positives": "Deliberate `hermes plugins install`. Low unless the session was tainted or the change came from a subagent.",
+   "required_fields": [
+    "kind",
+    "time",
+    "session_id",
+    "target"
+   ],
+   "enabled": true
+  },
+  {
+   "id": "SL-007",
+   "name": "Approval anomaly",
+   "severity": "medium",
+   "triggers": [
+    "approval.response",
+    "approval.request",
+    "tool.call"
+   ],
+   "attack": [],
+   "attack_note": "Behavioural, not a technique: a denied agent that keeps trying is the signal.",
+   "description": "Repeated denials, an approval burst, or a tool call that retried the same approval pattern right after a denial.",
+   "false_positives": "A user denying several unrelated prompts in a row. Threshold is configurable (approval_denies, approval_burst).",
+   "required_fields": [
+    "kind",
+    "time",
+    "session_id",
+    "outcome",
+    "attrs"
+   ],
+   "enabled": true
+  },
+  {
+   "id": "SL-008",
+   "name": "Subagent acted outside its parent's scope",
+   "severity": "high",
+   "triggers": [
+    "secret.access",
+    "net.egress",
+    "config.change",
+    "cron.change",
+    "plugin.change"
+   ],
+   "attack": [],
+   "attack_note": "Delegation itself is not a technique; the finding carries the child's action's mapping via SL-001/003.",
+   "description": "A delegated child session accessed credentials, reached an external host or changed configuration when its parent had done none of those in the window.",
+   "false_positives": "A parent that delegates 'deploy this' to a child that then legitimately reads credentials. Allow-list paths/hosts for that workflow.",
+   "required_fields": [
+    "kind",
+    "time",
+    "session_id",
+    "parent_session_id"
+   ],
+   "enabled": true
+  },
+  {
+   "id": "SL-009",
+   "name": "Suspicious command shape",
+   "severity": "high",
+   "triggers": [
+    "process.exec"
+   ],
+   "attack": [
+    "T1059.004",
+    "T1027"
+   ],
+   "attack_note": "T1105 for download-and-execute; T1140 for decode-and-run; T1070.003 and T1690 for history tampering; shell rc edits are SL-010.",
+   "description": "Encoded or downloaded content piped to an interpreter, reverse-shell constructs, hex obfuscation, setuid bits, log or history tampering.",
+   "false_positives": "Installer one-liners (`curl \u2026 | sh`) are common and dangerous in equal measure; the finding says which shape fired.",
+   "required_fields": [
+    "kind",
+    "time",
+    "session_id",
+    "tags",
+    "target"
+   ],
+   "enabled": true
+  },
+  {
+   "id": "SL-010",
+   "name": "Security configuration or instruction file changed",
+   "severity": "high",
+   "triggers": [
+    "config.change"
+   ],
+   "attack": [
+    "T1685"
+   ],
+   "attack_note": "T1685 (Defense Impairment; T1562.001 is revoked in ATT&CK 20) for Hermes config and hooks; T1685.007 when approvals are weakened; T1546.004 for shell rc files; T1098.004 for authorized_keys.",
+   "description": "Hermes config/.env/hooks/plugins, approval mode, agent instruction files (SOUL.md, AGENTS.md, CLAUDE.md), shell rc files, SSH authorized_keys or OS persistence dirs were written.",
+   "false_positives": "The user editing their own config through the agent. Approval-mode changes are always reported.",
+   "required_fields": [
+    "kind",
+    "time",
+    "session_id",
+    "target",
+    "tags"
+   ],
+   "enabled": true
+  },
+  {
+   "id": "SL-011",
+   "name": "Code published after sensitive access",
+   "severity": "medium",
+   "triggers": [
+    "net.egress"
+   ],
+   "attack": [
+    "T1567.001"
+   ],
+   "attack_note": "T1567.001 Exfiltration to Code Repository; secret-in-repo leaks are the common case.",
+   "description": "git push, a remote change, or a GitHub CLI publish happened in a session that had touched a credential store or a .env file.",
+   "false_positives": "Normal development after editing .env.example. Allow-list .env.example / templates.",
+   "required_fields": [
+    "kind",
+    "time",
+    "session_id",
+    "tags"
+   ],
+   "enabled": true
+  },
+  {
+   "id": "SL-012",
+   "name": "Data sent to a webhook or paste service",
+   "severity": "medium",
+   "triggers": [
+    "net.egress"
+   ],
+   "attack": [
+    "T1567.004"
+   ],
+   "attack_note": null,
+   "description": "A request to a webhook, tunnel, paste or OOB-interaction service (Discord/Slack webhooks, webhook.site, ngrok, pastebin, interact.sh \u2026).",
+   "false_positives": "Teams that notify Slack from scripts. Allow-list your own webhook host; the finding is high only when sensitive access preceded it (then SL-001 fires too).",
+   "required_fields": [
+    "kind",
+    "time",
+    "session_id",
+    "host",
+    "tags"
+   ],
+   "enabled": true
+  },
+  {
+   "id": "SL-013",
+   "name": "Message or delegation after sensitive access",
+   "severity": "medium",
+   "triggers": [
+    "net.egress",
+    "subagent.start"
+   ],
+   "attack": [
+    "T1041"
+   ],
+   "attack_note": "A chat platform the agent already talks on is its existing channel; T1041 (Exfiltration Over C2 Channel) is the nearest fit and is marked approximate.",
+   "description": "A send_message / kanban comment, or a subagent spawn, followed a credential access: data moving between agents or out through a chat channel.",
+   "false_positives": "Status updates to the owner after a deploy. Low unless the message is large or goes to a channel the session had not used.",
+   "required_fields": [
+    "kind",
+    "time",
+    "session_id",
+    "action"
+   ],
+   "enabled": true
+  },
+  {
+   "id": "SL-014",
+   "name": "Access to Hermes's own secrets or another profile",
+   "severity": "high",
+   "triggers": [
+    "secret.access",
+    "file.read",
+    "file.write"
+   ],
+   "attack": [
+    "T1552.001"
+   ],
+   "attack_note": null,
+   "description": "The agent read or wrote under HERMES_HOME's secret files (.env, auth.json) or another profile's directory.",
+   "false_positives": "The owner debugging their own install. Always worth a look.",
+   "required_fields": [
+    "kind",
+    "time",
+    "session_id",
+    "target",
+    "tags"
+   ],
+   "enabled": true
+  }
+ ],
+ "attack_version": "20.1"
+}

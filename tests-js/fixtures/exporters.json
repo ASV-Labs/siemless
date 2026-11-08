@@ -1,0 +1,30 @@
+{
+ "exporters": [
+  {
+   "name": "jsonl",
+   "enabled": true,
+   "state": "idle",
+   "sent": 0,
+   "failed": 0,
+   "dropped": 0,
+   "spooled": 0,
+   "last_ok": null,
+   "last_error": null,
+   "last_error_at": null,
+   "spool_bytes": 0,
+   "remote": false,
+   "format": "ocsf",
+   "events_path": "/tmp/tmpxpfwc4zw/events.jsonl",
+   "findings_path": "/tmp/tmpxpfwc4zw/findings.jsonl",
+   "max_mb": 50
+  }
+ ],
+ "queue": {
+  "size": 15,
+  "capacity": 10000,
+  "received": 15,
+  "dropped": 0,
+  "worker_alive": false
+ },
+ "remote_export": false
+}
