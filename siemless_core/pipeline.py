@@ -1,0 +1,221 @@
+"""The pipeline: hook payload → events → store → correlation → findings → dispatch.
+
+``Pipeline.ingest(hook, payload)`` is what the hook callbacks call. It does the cheap part on the
+agent thread (collect + enqueue) and everything else on its own worker. ``Pipeline.process_now``
+runs the whole chain synchronously for tests and for ``replay``.
+"""
+
+from __future__ import annotations
+
+import logging
+import queue
+import socket
+import threading
+import time
+from pathlib import Path
+from typing import Callable, Optional
+
+from . import PLUGIN_ID, __version__
+from .collectors import collect
+from .config import in_scope, load as load_config
+from .correlate import Correlator
+from .detect import Engine, finding_event, finding_to_dict
+from .dispatch import Dispatcher
+from .events import Event
+from .exporters.http import ElasticExporter, HecExporter, SummitExporter
+from .exporters.jsonl import JsonlExporter
+from .exporters.syslog import SyslogExporter
+from .store import Store, default_data_dir
+
+log = logging.getLogger("hermes.plugins.siemless")
+
+
+class Pipeline:
+    def __init__(self, config: Optional[dict] = None, *, store: Optional[Store] = None, data_dir: Optional[Path] = None,
+                 emit: Optional[Callable[[str, dict], None]] = None, worker: bool = True, profile: Optional[str] = None):
+        self.config = config or load_config()
+        self.data_dir = Path(data_dir) if data_dir else default_data_dir()
+        self.store = store or Store.shared(self.data_dir / "siemless.db")
+        self.profile = profile
+        self.hostname = self.config.get("hostname") or socket.gethostname()
+        self.emit = emit or (lambda name, payload: None)
+        self.corr = Correlator(window_ms=int(self.config["window_minutes"]) * 60 * 1000,
+                               first_seen_host=self._first_seen_host)
+        self.engine = Engine(self.corr, self.config)
+        self._in: "queue.Queue[Event]" = queue.Queue(maxsize=max(1000, int(self.config["queue_size"])))
+        self.dropped_in = 0
+        self.processed = 0
+        self.findings_total = 0
+        self.last_event_at: Optional[int] = None
+        self.last_finding_at: Optional[int] = None
+        self.started_at = int(time.time() * 1000)
+        self.latency_ms: list[int] = []  # last 100 hook→finding latencies
+        self.dispatcher = Dispatcher(spool_dir=self.data_dir / "spool", queue_size=int(self.config["queue_size"]),
+                                     spool_max_mb=float(self.config["spool_max_mb"]), on_health=self._save_health, worker=worker)
+        self._build_exporters()
+        self._stop = threading.Event()
+        self._thread: Optional[threading.Thread] = None
+        self._last_prune = 0.0
+        if worker:
+            self._thread = threading.Thread(target=self._run, name="siemless-pipeline", daemon=True)
+            self._thread.start()
+
+    # ------------------------------------------------------------------ exporters
+    def _build_exporters(self) -> None:
+        cfg = self.config
+        consent = bool(cfg.get("remote_export"))
+        if cfg.get("jsonl_enabled", True):
+            self.dispatcher.add(JsonlExporter({"path": cfg.get("jsonl_path") or None, "format": cfg.get("jsonl_format"),
+                                               "max_mb": cfg.get("jsonl_max_mb", 50), "hostname": self.hostname}, data_dir=self.data_dir))
+        remote_state = "idle" if consent else "needs_consent"
+        if cfg.get("syslog_target"):
+            try:
+                self.dispatcher.add(SyslogExporter({"target": cfg["syslog_target"], "format": cfg.get("syslog_format"),
+                                                    "ca_file": cfg.get("syslog_ca_file") or None, "hostname": self.hostname}), state=remote_state)
+            except ValueError as exc:
+                log.warning("siemless: syslog exporter not started: %s", exc)
+        if cfg.get("hec_url"):
+            try:
+                self.dispatcher.add(HecExporter({"url": cfg["hec_url"], "index": cfg.get("hec_index") or None,
+                                                 "sourcetype": cfg.get("hec_sourcetype"), "format": cfg.get("hec_format"),
+                                                 "ca_file": cfg.get("http_ca_file") or None, "hostname": self.hostname}), state=remote_state)
+            except ValueError as exc:
+                log.warning("siemless: hec exporter not started: %s", exc)
+        if cfg.get("elastic_url"):
+            try:
+                self.dispatcher.add(ElasticExporter({"url": cfg["elastic_url"], "data_stream": cfg.get("elastic_data_stream"),
+                                                     "ca_file": cfg.get("http_ca_file") or None, "hostname": self.hostname}), state=remote_state)
+            except ValueError as exc:
+                log.warning("siemless: elastic exporter not started: %s", exc)
+        if cfg.get("summit_url"):
+            try:
+                self.dispatcher.add(SummitExporter({"url": cfg["summit_url"], "ca_file": cfg.get("http_ca_file") or None,
+                                                    "hostname": self.hostname, "agent": self.profile or "hermes"},
+                                                   finding_lookup=self.store.finding), state=remote_state)
+            except ValueError as exc:
+                log.warning("siemless: summit exporter not started: %s", exc)
+        for slot in self.dispatcher.slots.values():
+            self.store.set_exporter_health(slot.exporter.name, enabled=slot.enabled, state=slot.state)
+
+    def _save_health(self, health: list[dict]) -> None:
+        for h in health:
+            self.store.set_exporter_health(h["name"], enabled=h["enabled"], state=h["state"], sent=h["sent"], failed=h["failed"],
+                                           dropped=h["dropped"], spooled=h["spooled"], last_ok=h["last_ok"],
+                                           last_error=h["last_error"], last_error_at=h["last_error_at"])
+        self.emit("health", {"exporters": health, "queue": self.dispatcher.queue_health()})
+
+    def _first_seen_host(self, host: str, when: int) -> bool:
+        return self.store.note_host(host, when)
+
+    # ------------------------------------------------------------------ ingress
+    def ingest(self, hook: str, payload: dict) -> list[Event]:
+        """Agent-thread entry point: collect, enqueue, return. Microseconds."""
+        events = collect(hook, payload, config=self.config)
+        for e in events:
+            e.profile = e.profile or self.profile
+            try:
+                self._in.put_nowait(e)
+            except queue.Full:
+                self.dropped_in += 1
+        return events
+
+    def process_now(self, hook: str, payload: dict) -> tuple[list[Event], list[dict]]:
+        """Synchronous: collect and run the full chain on the caller's thread (tests, replay)."""
+        events = collect(hook, payload, config=self.config)
+        findings: list[dict] = []
+        for e in events:
+            e.profile = e.profile or self.profile
+            findings += self._process(e)
+        return events, findings
+
+    def process_event(self, e: Event) -> list[dict]:
+        return self._process(e)
+
+    # ------------------------------------------------------------------ worker
+    def _run(self) -> None:
+        while not self._stop.is_set():
+            try:
+                e = self._in.get(timeout=0.5)
+            except queue.Empty:
+                self._housekeeping()
+                continue
+            try:
+                self._process(e)
+            except Exception as exc:  # never die
+                log.debug("siemless pipeline: %s", exc)
+
+    def _process(self, e: Event) -> list[dict]:
+        t0 = time.monotonic()
+        self.store.add_events([e])
+        self.processed += 1
+        self.last_event_at = e.time
+        out: list[dict] = []
+        st = self.corr.add(e)
+        to_export: list[Event] = []
+        if in_scope(e.kind, e.tags, self.config["export_scope"]):
+            to_export.append(e)
+        if st is not None:
+            for f in self.engine.evaluate(e, st):
+                fd = finding_to_dict(f, profile=self.profile)
+                self.store.add_finding(fd)
+                fe = finding_event(fd)
+                self.store.add_events([fe])
+                self.corr.add(fe)
+                to_export.append(fe)
+                out.append(fd)
+                self.findings_total += 1
+                self.last_finding_at = fd["detected_at"]
+                self.latency_ms.append(int((time.monotonic() - t0) * 1000))
+                if len(self.latency_ms) > 100:
+                    self.latency_ms.pop(0)
+                self.emit("finding", fd)
+        if to_export:
+            self.dispatcher.offer(to_export)
+        return out
+
+    def _housekeeping(self) -> None:
+        now = time.monotonic()
+        if now - self._last_prune > 3600:
+            self._last_prune = now
+            try:
+                self.store.prune(max_age_days=int(self.config["retention_days"]), max_events=int(self.config["max_events"]))
+            except Exception:
+                pass
+
+    # ------------------------------------------------------------------ status
+    def status(self) -> dict:
+        since_day = int(time.time() * 1000) - 86_400_000
+        return {
+            "plugin": PLUGIN_ID, "version": __version__, "profile": self.profile, "hostname": self.hostname,
+            "started_at": self.started_at, "processed": self.processed, "dropped_in": self.dropped_in,
+            "findings_total": self.findings_total, "last_event_at": self.last_event_at, "last_finding_at": self.last_finding_at,
+            "events_24h": self.store.count_events(since_day), "kinds_24h": self.store.kind_counts(since_day),
+            "findings_24h": self.store.finding_counts(since_day), "rules_24h": self.store.rule_counts(since_day),
+            "rules": {"enabled": len(self.engine.rules), "evaluations": self.engine.evaluations, "suppressed": self.engine.suppressed},
+            "correlator": self.corr.stats(), "queue": self.dispatcher.queue_health(), "exporters": self.dispatcher.health(),
+            "export_scope": self.config["export_scope"], "remote_export": bool(self.config.get("remote_export")),
+            "db_bytes": self.store.db_size(), "hosts_known": len(self.store.hosts(100000)),
+            "latency_ms": {"p50": _pct(self.latency_ms, 50), "p95": _pct(self.latency_ms, 95), "n": len(self.latency_ms)},
+        }
+
+    def flush(self, timeout: float = 3.0) -> None:
+        """Tests: wait for the input queue and dispatcher to drain."""
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline and (not self._in.empty() or not self.dispatcher.q.empty()):
+            time.sleep(0.02)
+
+    def close(self) -> None:
+        self._stop.set()
+        if self._thread:
+            self._thread.join(2.0)
+        self.dispatcher.stop()
+
+
+def _pct(xs: list[int], p: int) -> Optional[int]:
+    if not xs:
+        return None
+    s = sorted(xs)
+    return s[min(len(s) - 1, int(len(s) * p / 100))]
+
+
+__all__ = ["Pipeline"]

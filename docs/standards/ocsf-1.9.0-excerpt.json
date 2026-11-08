@@ -1,0 +1,360 @@
+{
+ "ocsf_version": "1.9.0",
+ "source": "https://github.com/ocsf/ocsf-schema tag v1.9.0 commit 856d462bd20dc46cc1ffed2dfffe3b91ef0fbeba",
+ "retrieved": "2026-11-07",
+ "categories": {
+  "application": {
+   "uid": 6,
+   "caption": "Application Activity"
+  },
+  "discovery": {
+   "uid": 5,
+   "caption": "Discovery"
+  },
+  "findings": {
+   "uid": 2,
+   "caption": "Findings"
+  },
+  "iam": {
+   "uid": 3,
+   "caption": "Identity & Access Management"
+  },
+  "network": {
+   "uid": 4,
+   "caption": "Network Activity"
+  },
+  "remediation": {
+   "uid": 7,
+   "caption": "Remediation"
+  },
+  "system": {
+   "uid": 1,
+   "caption": "System Activity"
+  },
+  "unmanned_systems": {
+   "uid": 8,
+   "caption": "Unmanned Systems"
+  }
+ },
+ "class_uids": {
+  "api_activity": 6003,
+  "process_activity": 1007,
+  "file_activity": 1001,
+  "network_activity": 4001,
+  "http_activity": 4002,
+  "scheduled_job_activity": 1006,
+  "software_info": 5020,
+  "application_lifecycle": 6002,
+  "device_config_state_change": 5019,
+  "detection_finding": 2004,
+  "authorize_session": 3003,
+  "user_access": 3005,
+  "event_log_activity": 1008,
+  "script_activity": 1009,
+  "web_resources_activity": 6001,
+  "datastore_activity": 6005
+ },
+ "enums": {
+  "severity_id": {
+   "0": "Unknown",
+   "1": "Informational",
+   "2": "Low",
+   "3": "Medium",
+   "4": "High",
+   "5": "Critical",
+   "6": "Fatal",
+   "99": "Other"
+  },
+  "confidence_id": {
+   "0": "Unknown",
+   "1": "Low",
+   "2": "Medium",
+   "3": "High",
+   "99": "Other"
+  },
+  "action_id": {
+   "0": "Unknown",
+   "1": "Allowed",
+   "2": "Denied",
+   "99": "Other"
+  },
+  "disposition_id": {
+   "0": "Unknown",
+   "1": "Allowed",
+   "2": "Blocked",
+   "3": "Quarantined",
+   "4": "Isolated",
+   "5": "Deleted",
+   "6": "Dropped",
+   "7": "Custom Action",
+   "8": "Approved",
+   "9": "Restored",
+   "10": "Exonerated",
+   "11": "Corrected",
+   "12": "Partially Corrected",
+   "13": "Uncorrected",
+   "14": "Delayed",
+   "15": "Detected",
+   "16": "No Action",
+   "17": "Logged",
+   "18": "Tagged",
+   "19": "Alert",
+   "20": "Count",
+   "21": "Reset",
+   "22": "Captcha",
+   "23": "Challenge",
+   "24": "Access Revoked",
+   "25": "Rejected",
+   "26": "Unauthorized",
+   "27": "Error",
+   "99": "Other"
+  },
+  "security_control_profile.action_id": {
+   "0": "Unknown",
+   "1": "Allowed",
+   "2": "Denied",
+   "3": "Observed",
+   "4": "Modified",
+   "99": "Other"
+  }
+ },
+ "observable_type_ids": {
+  "cmd_line": 13,
+  "country": 14,
+  "pid": 15,
+  "user_agent": 16,
+  "credential_uid": 19,
+  "endpoint": 20,
+  "user": 21,
+  "email": 22,
+  "url": 23,
+  "file": 24,
+  "process": 25,
+  "location": 26,
+  "container": 27,
+  "fingerprint": 30,
+  "script_content": 36,
+  "serial_number": 37,
+  "message_uid": 42
+ },
+ "objects": {
+  "ai_agent": {
+   "caption": "AI Agent",
+   "attributes": {
+    "ai_model": "recommended",
+    "charter": "optional",
+    "instance_uid": "recommended",
+    "name": "recommended",
+    "type": "optional",
+    "type_id": "recommended",
+    "uid": "recommended",
+    "version": "recommended"
+   }
+  },
+  "delegation": {
+   "caption": "Delegation",
+   "attributes": {
+    "created_time": "recommended",
+    "issuer_uid": "recommended",
+    "parent_uid": "optional",
+    "uid": "required"
+   }
+  },
+  "attestation": {
+   "caption": "Attestation",
+   "attributes": {
+    "authority_uid": "recommended",
+    "chain_uid": "recommended",
+    "fingerprint": "recommended",
+    "prev_event": "recommended",
+    "signatures": "recommended",
+    "uid": "optional"
+   }
+  },
+  "prev_event": {
+   "caption": "Previous Event",
+   "attributes": {
+    "fingerprint": "optional",
+    "type_uid": "recommended",
+    "uid": "required"
+   }
+  },
+  "message_context": {
+   "caption": "Message Context",
+   "attributes": {
+    "ai_role": "optional",
+    "ai_role_id": "recommended",
+    "application": "recommended",
+    "completion_tokens": "optional",
+    "name": "optional",
+    "prompt_text": "optional",
+    "prompt_tokens": "optional",
+    "response_text": "optional",
+    "service": "recommended",
+    "total_tokens": "optional",
+    "uid": "optional"
+   }
+  },
+  "ai_model": {
+   "caption": "AI Model",
+   "attributes": {
+    "ai_provider": "required",
+    "name": "required",
+    "uid": "optional",
+    "version": "recommended"
+   }
+  },
+  "job": {
+   "caption": "Job",
+   "attributes": {
+    "cmd_line": "recommended",
+    "created_time": "recommended",
+    "desc": "recommended",
+    "file": "optional",
+    "job_actions": "optional",
+    "job_triggers": "optional",
+    "last_run_time": "recommended",
+    "name": "recommended",
+    "next_run_time": "optional",
+    "run_state": "optional",
+    "run_state_id": "recommended",
+    "type": "optional",
+    "type_id": "recommended",
+    "uid": "optional",
+    "user": "optional"
+   }
+  },
+  "finding_info": {
+   "caption": "Finding Information",
+   "attributes": {
+    "analytic": "recommended",
+    "attack_graph": "optional",
+    "attacks": "optional",
+    "created_time": "optional",
+    "data_sources": "optional",
+    "desc": "optional",
+    "first_seen_time": "optional",
+    "kill_chain": "optional",
+    "last_seen_time": "optional",
+    "modified_time": "optional",
+    "product": "optional",
+    "product_uid": "optional",
+    "related_analytics": "optional",
+    "related_events": "optional",
+    "related_events_count": "optional",
+    "src_url": "optional",
+    "tags": "optional",
+    "title": "recommended",
+    "traits": "optional",
+    "types": "optional",
+    "uid": "required",
+    "uid_alt": "optional"
+   }
+  },
+  "analytic": {
+   "caption": "Analytic",
+   "attributes": {
+    "algorithm": "optional",
+    "category": "optional",
+    "desc": "optional",
+    "name": "optional",
+    "related_analytics": "optional",
+    "sensor_info_list": "optional",
+    "state": "optional",
+    "state_id": "optional",
+    "type": "optional",
+    "type_id": "required",
+    "uid": "optional",
+    "version": "optional"
+   }
+  },
+  "attack": {
+   "caption": "Attack Tactics & Techniques",
+   "attributes": {
+    "mitigation": "optional",
+    "sub_technique": "recommended",
+    "tactic": "recommended",
+    "tactics": "optional",
+    "technique": "recommended",
+    "version": "recommended"
+   }
+  },
+  "technique": {
+   "caption": "MITRE Technique",
+   "attributes": {
+    "name": "optional",
+    "src_url": "optional",
+    "uid": "optional"
+   }
+  },
+  "tactic": {
+   "caption": "MITRE Tactic",
+   "attributes": {
+    "name": "optional",
+    "src_url": "optional",
+    "uid": "optional"
+   }
+  },
+  "api": {
+   "caption": "API",
+   "attributes": {
+    "group": "optional",
+    "operation": "required",
+    "request": "recommended",
+    "response": "recommended",
+    "service": "optional",
+    "token": "optional",
+    "version": "optional"
+   }
+  },
+  "metadata": {
+   "caption": "Metadata",
+   "attributes": {
+    "correlation_uid": "optional",
+    "debug": "optional",
+    "event_code": "optional",
+    "extension": "optional",
+    "extensions": "optional",
+    "is_truncated": "optional",
+    "labels": "optional",
+    "log_format": "optional",
+    "log_level": "optional",
+    "log_name": "recommended",
+    "log_provider": "optional",
+    "log_source": "optional",
+    "log_version": "optional",
+    "logged_time": "optional",
+    "loggers": "optional",
+    "modified_time": "optional",
+    "original_event_uid": "optional",
+    "original_time": "recommended",
+    "processed_time": "optional",
+    "product": "required",
+    "profiles": "optional",
+    "reporter": "recommended",
+    "sequence": "optional",
+    "source": "optional",
+    "tags": "optional",
+    "tenant_uid": "recommended",
+    "total_queued_duration": "optional",
+    "transformation_info_list": "optional",
+    "transmit_time": "optional",
+    "type": "optional",
+    "uid": "optional",
+    "untruncated_size": "optional",
+    "version": "required"
+   }
+  }
+ },
+ "profiles": {
+  "ai_operation": {
+   "ai_agent": "optional",
+   "ai_model": "recommended",
+   "delegation": "optional",
+   "message_context": "optional"
+  },
+  "record_integrity": {
+   "attestation_list": "optional"
+  }
+ }
+}

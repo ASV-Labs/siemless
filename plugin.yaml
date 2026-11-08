@@ -1,0 +1,201 @@
+name: siemless
+version: 0.1.0
+description: 'Agent security telemetry for SIEMs. Every tool call, file read, shell command, outbound request, approval,
+  subagent, scheduled job and config change becomes an OCSF event; 14 deterministic rules correlate them into findings
+  (secret access then egress, prompt-injection chains, credential discovery, persistence, governance tampering,
+  …) with ATT&CK mapping and observed/inferred evidence labels. Exports as JSONL (Wazuh), RFC 5424 syslog, CEF,
+  Splunk HEC and Elastic ECS, with packs for each. Observer hooks only: no tools, no middleware, nothing blocked;
+  nothing leaves the machine until remote_export is set.'
+author: ASV Labs (Charles Bonetti)
+license: MIT
+homepage: https://github.com/ASV-Labs/siemless
+requires_hermes: '>=0.21.5'
+provides_hooks:
+- on_session_start
+- on_session_end
+- on_session_reset
+- on_session_delete
+- pre_llm_call
+- post_llm_call
+- post_api_request
+- api_request_error
+- post_auxiliary_call
+- post_tool_call
+- pre_approval_request
+- post_approval_response
+- on_human_input_request
+- on_human_input_resolved
+- subagent_start
+- subagent_stop
+- pre_command
+- on_skill_lifecycle
+- kanban_task_claimed
+- kanban_task_completed
+- kanban_task_blocked
+- on_kanban_worker_spawned
+- on_kanban_worker_exited
+provides_tools: []
+provides_middleware: []
+requires_env: []
+config_schema:
+  record_args:
+    type: bool
+    default: true
+    description: Keep bounded, redacted tool arguments on tool.call events (default true). false keeps argument
+      names only.
+  record_prompts:
+    type: bool
+    default: false
+    description: 'Keep a short redacted preview of user messages and subagent goals (default false: hashes and lengths
+      only).'
+  record_aux_calls:
+    type: bool
+    default: true
+    description: Record auxiliary model calls (titles, compression, vision) as aux.call events (default true).
+  window_minutes:
+    type: int
+    default: 10
+    description: 'Correlation window: how far back a rule looks for the first half of a sequence (default 10).'
+  finding_cooldown_s:
+    type: int
+    default: 600
+    description: The same rule with the same key fires at most once per this many seconds (default 600).
+  approval_denies:
+    type: int
+    default: 3
+    description: 'SL-007: denials within five minutes that make a finding (default 3).'
+  approval_burst:
+    type: int
+    default: 6
+    description: 'SL-007: approval prompts within one minute that make a finding (default 6).'
+  allow_hosts:
+    type: str
+    default: ''
+    description: Comma-separated hosts (or .suffixes) that are expected destinations; egress to them is not reported.
+  allow_paths:
+    type: str
+    default: ''
+    description: Comma-separated path prefixes or suffixes your workflow legitimately touches (e.g. .env.example).
+  disable_rules:
+    type: str
+    default: ''
+    description: Comma-separated rule ids to turn off (e.g. SL-004,SL-011).
+  retention_days:
+    type: int
+    default: 30
+    description: Delete stored events and findings older than this (default 30).
+  max_events:
+    type: int
+    default: 200000
+    description: Keep at most this many events in the local database (default 200000).
+  queue_size:
+    type: int
+    default: 10000
+    description: In-memory dispatch queue; when full the oldest event is dropped and counted (default 10000).
+  spool_max_mb:
+    type: int
+    default: 20
+    description: Per-exporter on-disk spool while a destination is down; beyond this events are dropped and counted
+      (default 20).
+  export_scope:
+    type: str
+    default: security
+    description: 'What leaves the local store: findings | security | all (default security = findings plus security-relevant
+      events).'
+    choices:
+    - findings
+    - security
+    - all
+  jsonl_enabled:
+    type: bool
+    default: true
+    description: Write events.jsonl and findings.jsonl under plugin-data/siemless (default true). Wazuh reads these.
+  jsonl_format:
+    type: str
+    default: ocsf
+    description: 'Shape of the JSONL lines: ocsf | ecs | canonical (default ocsf).'
+    choices:
+    - ocsf
+    - ecs
+    - canonical
+  jsonl_path:
+    type: str
+    default: ''
+    description: 'Directory for the JSONL files (default: plugin-data/siemless).'
+  jsonl_max_mb:
+    type: int
+    default: 50
+    description: Rotate each JSONL file at this size; 5 backups are kept (default 50).
+  remote_export:
+    type: bool
+    default: false
+    description: 'Consent gate: nothing is sent off this machine until this is true (default false).'
+  syslog_target:
+    type: str
+    default: ''
+    description: udp://host:514, tcp://host:6514 or tls://host:6514. Empty = off.
+  syslog_format:
+    type: str
+    default: ocsf
+    description: 'Syslog MSG body: ocsf | ecs | canonical | cef (default ocsf).'
+    choices:
+    - ocsf
+    - ecs
+    - canonical
+    - cef
+  syslog_ca_file:
+    type: str
+    default: ''
+    description: PEM bundle for a private CA on the TLS syslog receiver (verification is always on).
+  hec_url:
+    type: str
+    default: ''
+    description: 'Splunk HEC endpoint, e.g. https://splunk.example.com:8088/services/collector/event. Token: SIEMLESS_HEC_TOKEN.'
+  hec_index:
+    type: str
+    default: ''
+    description: 'Splunk index to write to (default: the token''s default index).'
+  hec_sourcetype:
+    type: str
+    default: siemless:ocsf
+    description: Splunk sourcetype (default siemless:ocsf).
+  hec_format:
+    type: str
+    default: ocsf
+    description: 'Event body sent to HEC: ocsf | ecs | canonical (default ocsf).'
+    choices:
+    - ocsf
+    - ecs
+    - canonical
+  elastic_url:
+    type: str
+    default: ''
+    description: 'Elasticsearch base URL, e.g. https://es.example.com:9200. Documents are ECS. Key: SIEMLESS_ELASTIC_API_KEY.'
+  elastic_data_stream:
+    type: str
+    default: logs-siemless.hermes-default
+    description: Elastic data stream name (default logs-siemless.hermes-default).
+  summit_url:
+    type: str
+    default: ''
+    description: 'The Summit (or any receiver with the documented contract) endpoint. Token: SIEMLESS_SUMMIT_TOKEN.'
+  http_ca_file:
+    type: str
+    default: ''
+    description: PEM bundle for a private CA on the HEC / Elastic / Summit endpoints.
+  hostname:
+    type: str
+    default: ''
+    description: 'Host name to stamp on exported events (default: the machine''s).'
+  hec_token:
+    type: secret
+    env: SIEMLESS_HEC_TOKEN
+    description: Splunk HEC token (only when hec_url is set).
+  elastic_api_key:
+    type: secret
+    env: SIEMLESS_ELASTIC_API_KEY
+    description: Elasticsearch API key (only when elastic_url is set).
+  summit_token:
+    type: secret
+    env: SIEMLESS_SUMMIT_TOKEN
+    description: Bearer token for the Summit receiver (only when summit_url is set).
