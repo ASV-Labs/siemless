@@ -480,8 +480,9 @@ __all__ = [
 _INJECTION_PATTERNS = [
     ("ignore_instructions", r"(?i)\b(ignore|disregard|forget|override)\b.{0,40}\b(previous|prior|above|all|earlier|your)\b.{0,30}\b(instructions?|rules|prompts?|directives?)"),
     ("role_reassign", r"(?i)\b(you are now|from now on,? you|new instructions?:|system prompt:|developer mode|act as (an? )?(admin|root|system))"),
+    ("agent_note", r"(?i)\b(system|important|urgent|admin(istrator)?|developer|security|compliance)\s+(note|notice|instructions?)\s+(for|to)\s+(the\s+)?(ai|llm|language model|assistant|agent|model|claude|hermes|gpt)\b"),
     ("agent_address", r"(?i)\b(ai|llm|language model|assistant|agent|claude|hermes|gpt)\b.{0,40}\b(must|should|need to|are instructed to|please)\b.{0,60}\b(read|send|upload|run|execute|curl|post|email|write|append)"),
-    ("secret_ask", r"(?i)\b(read|cat|print|send|upload|post|include|paste)\b.{0,60}(\.ssh|id_rsa|id_ed25519|\.env\b|credentials|api[_ -]?key|private key|authorized[_]keys|auth\.json)"),
+    ("secret_ask", r"(?i)\b(read|cat|print|send|upload|post|include|paste)\b(?:.{0,60}?|[^.!?\n]{61,160}?)(\.ssh|id_rsa|id_ed25519|\.env\b|credentials|api[_ -]?key|private key|authorized[_]keys|auth\.json)"),
     ("exec_ask", r"(?i)(curl|wget)\s+[^\n]{0,200}\|\s*(ba|z)?sh\b"),
     ("hidden_text", r"(?is)(<!--.{0,400}?(instruction|assistant|agent|ignore).{0,400}?-->|display\s*:\s*none|font-size\s*:\s*0|color\s*:\s*(#fff(fff)?|white)\s*;\s*background)"),
     ("invisible_chars", "[\u200b\u200c\u200d\u2060\u2062\u2063\u2064\ufeff\U000e0000-\U000e007f]{3,}"),
