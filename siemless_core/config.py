@@ -101,6 +101,12 @@ def load(ctx: Any = None, overrides: dict | None = None) -> dict:
     return cfg
 
 
+def delivery_settings(ctx: Any) -> dict:
+    """The settings a running agent rereads. Only these, because each read goes through Hermes."""
+    return {key: _coerce(SCHEMA[key][0], ctx.get_config(key, None), SCHEMA[key][1])
+            for key in ("remote_export", "syslog_target", "hec_url", "elastic_url", "summit_url")}
+
+
 def in_scope(kind: str, tags: list[str], scope: str) -> bool:
     if scope == "all":
         return True

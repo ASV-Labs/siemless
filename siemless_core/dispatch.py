@@ -151,6 +151,28 @@ class Dispatcher:
             self.slots[exporter.name] = slot
         return slot
 
+    def remove(self, name: str) -> None:
+        with self._lock:
+            slot = self.slots.pop(name, None)
+        if slot is not None:
+            try:
+                slot.exporter.close()
+            except Exception:  # the slot is gone either way; a socket that will not close must not stop the watcher
+                pass
+
+    def set_consent(self, granted: bool) -> None:
+        """Apply the remote_export setting to every remote exporter, in either direction."""
+        with self._lock:
+            slots = [s for s in self.slots.values() if s.exporter.remote]
+        for slot in slots:
+            if not granted and slot.state != "needs_consent":
+                slot.state = "needs_consent"
+                slot.dirty = True
+            elif granted and slot.state == "needs_consent":
+                slot.state = "idle"
+                slot.next_retry = 0.0
+                slot.dirty = True
+
     # ------------------------------------------------------------ producer
     def offer(self, events: list[Event]) -> None:
         """Agent-thread side. Never blocks: on a full queue the oldest event is dropped."""

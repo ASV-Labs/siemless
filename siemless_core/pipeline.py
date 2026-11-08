@@ -30,10 +30,17 @@ from .store import Store, default_data_dir
 log = logging.getLogger("hermes.plugins.siemless")
 
 
+# Which setting names each remote destination. Clearing one stops that exporter in a running agent.
+DESTINATION_SETTINGS = {"syslog": "syslog_target", "hec": "hec_url", "elastic": "elastic_url", "summit": "summit_url"}
+SETTINGS_POLL_S = 5.0
+
+
 class Pipeline:
     def __init__(self, config: Optional[dict] = None, *, store: Optional[Store] = None, data_dir: Optional[Path] = None,
-                 emit: Optional[Callable[[str, dict], None]] = None, worker: bool = True, profile: Optional[str] = None):
+                 emit: Optional[Callable[[str, dict], None]] = None, worker: bool = True, profile: Optional[str] = None,
+                 reload_config: Optional[Callable[[], dict]] = None):
         self.config = config or load_config()
+        self._reload_config = reload_config
         self.data_dir = Path(data_dir) if data_dir else default_data_dir()
         self.store = store or Store.shared(self.data_dir / "siemless.db")
         self.profile = profile
@@ -67,6 +74,8 @@ class Pipeline:
         if worker:
             self._thread = threading.Thread(target=self._run, name="siemless-pipeline", daemon=True)
             self._thread.start()
+            if reload_config is not None:  # its own thread: reading settings can block, and events must not wait on it
+                threading.Thread(target=self._watch_settings, name="siemless-settings", daemon=True).start()
 
     # ------------------------------------------------------------------ exporters
     def _build_exporters(self) -> None:
@@ -105,6 +114,30 @@ class Pipeline:
                 log.warning("siemless: summit exporter not started: %s", exc)
         for slot in self.dispatcher.slots.values():
             self.store.set_exporter_health(slot.exporter.name, enabled=slot.enabled, state=slot.state)
+
+    def _watch_settings(self) -> None:
+        while not self._stop.wait(SETTINGS_POLL_S):
+            self.refresh_delivery_settings()
+
+    def refresh_delivery_settings(self) -> None:
+        """Honour a withdrawn or restored consent, or a cleared destination, without a restart.
+
+        Consent is a promise about what leaves the machine, so it cannot wait for the gateway to restart.
+        A destination that is added or changed still needs a restart, because that builds a new exporter."""
+        if self._reload_config is None:
+            return
+        try:
+            cfg = self._reload_config()
+        except Exception as exc:  # unreadable settings change nothing
+            log.debug("siemless settings reload: %s", exc)
+            return
+        consent = bool(cfg.get("remote_export"))
+        self.config["remote_export"] = consent
+        self.dispatcher.set_consent(consent)
+        for name, key in DESTINATION_SETTINGS.items():
+            if key in cfg and not cfg[key]:
+                self.config[key] = cfg[key]
+                self.dispatcher.remove(name)
 
     def _save_health(self, health: list[dict]) -> None:
         for h in health:
@@ -223,7 +256,7 @@ class Pipeline:
 
     def status(self) -> dict:
         since_day = int(time.time() * 1000) - 86_400_000
-        exporters = self.dispatcher.health() if self.live else self._stored_exporters()
+        exporters = self.exporter_health()
         latency = self.store.finding_latencies()
         return {
             "plugin": PLUGIN_ID, "version": __version__, "profile": self.profile, "hostname": self.hostname,
@@ -241,14 +274,20 @@ class Pipeline:
             "latency_ms": {"p50": _pct(latency, 50), "p95": _pct(latency, 95), "n": len(latency)},
         }
 
+    def exporter_health(self) -> list[dict]:
+        return self.dispatcher.health() if self.live else self._stored_exporters()
+
     def _stored_exporters(self) -> list[dict]:
-        rows = self.store.exporter_health()
-        described = {s.exporter.name: s.exporter.describe() for s in self.dispatcher.slots.values()}
         out = []
-        for r in rows:
+        for r in self.store.exporter_health():
+            slot = self.dispatcher.slots.get(r["name"])
+            if slot is None:  # its destination has been cleared; the old row says nothing about the settings now
+                continue
             d = dict(r)
             d["enabled"] = bool(d.get("enabled"))
-            d.update(described.get(d["name"], {}))
+            d.update(slot.exporter.describe())
+            if slot.state == "needs_consent":  # a failure from before consent was withdrawn is not a failure now
+                d["state"] = "needs_consent"
             out.append(d)
         return out
 

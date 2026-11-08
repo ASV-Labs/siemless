@@ -58,6 +58,7 @@ test('contract: id, contributions, events, no app-markup reach', () => {
   ctx.contributions.find((c) => c.area === sdk.PALETTE_AREA).data.run()
   assert.deepEqual(sdk.calls.navigate, ['/siemless'])
   const src = readFileSync(new URL('../../desktop/plugin.js', import.meta.url), 'utf8')
+  assert.doesNotMatch(src, /hour: '2-digit'/, 'a 12-hour clock has no leading zero (01:42:04 PM)')
   assert.doesNotMatch(src, /document\.(querySelector|getElementsBy|getElementById)|data-slot|data-tour|data-sidebar|data-testid|MutationObserver|window\.hermesDesktop|dangerouslySetInnerHTML|\beval\(|new Function/)
 })
 

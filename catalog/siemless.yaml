@@ -18,7 +18,7 @@ description: >-
   spool under plugin-data/siemless/ (0600). Network: none by default; with remote_export true and a
   destination set, sends the configured event scope to that syslog (UDP/TCP/TLS), Splunk HEC, Elastic or
   JSON receiver endpoint over verified TLS (plain HTTP to 127.0.0.1 only behind a lab switch); tokens via
-  agent.secret_scope.get_secret, never read from .env. Two daemon worker threads per process. The
+  agent.secret_scope.get_secret, never read from .env. Three daemon threads per process (pipeline, dispatch, settings watch). The
   dashboard half reads plugin settings through hermes_cli.config.load_config. No shell commands, no
   telemetry to the author, no self-updater. The install scanner reports caution because the detector
   lists the patterns it looks for (ssh paths, webhook hosts, curl|sh, cron, env dumps) in

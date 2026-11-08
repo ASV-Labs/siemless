@@ -177,6 +177,15 @@ _NET_CLIENTS = {
 }
 _URL_RE = re.compile(r"""(?i)\b((?:https?|ftp|sftp|ssh|smtp|smtps|wss?|git|rsync)://[^\s'"`<>|;)]+)""")
 _DEV_TCP_RE = re.compile(r"/dev/(tcp|udp)/([^/\s]+)/(\d+)")
+_FILE_UPLOAD_RE = re.compile(
+    r"""(?:^|\s)(?:(?:-d|--data(?:-binary|-raw|-ascii|-urlencode)?|-F|--form)[=\s]*['"]?(?:[\w.-]+=)?@|(?:-T|--upload-file)[=\s]*\S|--post-file[=\s]*\S)"""
+)
+
+
+def only_uploads_files(cmd: str) -> bool:
+    """True when every network command in ``cmd`` sends a local file. A fetch beside an upload still counts as a fetch."""
+    parts = [p for p in re.split(r"&&|\|\||[;|\n]", cmd or "") if _URL_RE.search(p)]
+    return bool(parts) and all(_FILE_UPLOAD_RE.search(p) for p in parts)
 
 WEBHOOK_HOSTS = (
     "discord.com", "discordapp.com", "hooks.slack.com", "api.telegram.org", "webhook.site", "requestbin.com",

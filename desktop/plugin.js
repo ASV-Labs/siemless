@@ -76,7 +76,7 @@ function fmtTs(ms) {
 function fmtClock(ms) {
   if (!ms) return '-'
   const d = new Date(ms)
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })
 }
 async function rest(path, opts) {
   if (!REST) throw new Error('siemless backend is not connected')

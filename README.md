@@ -144,7 +144,10 @@ its replacement T1685 and the agent-specific T1685.007.)
 
 All keys live under `plugins.entries.siemless.settings` (Desktop → Settings → Plugins → SIEMless,
 or `hermes config set plugins.entries.siemless.settings.<key> <value>`). Defaults are safe: local
-JSONL on, remote export off, prompts hashed, arguments bounded and redacted.
+JSONL on, remote export off, prompts hashed, arguments bounded and redacted. Turning `remote_export`
+off, or clearing a destination, reaches a running agent within seconds. Adding or changing a
+destination needs a gateway restart. A cloned profile keeps its source's export settings, so check
+them before you use the clone.
 
 | key | default | |
 |---|---|---|
@@ -206,7 +209,7 @@ Hermes passes (bounded and redacted before storage). Writes: its own SQLite data
 and spool under `plugin-data/siemless/`, all `0600`. Network: none unless `remote_export` is true
 *and* a destination is set, then only to those destinations over verified TLS (UDP/TCP syslog if
 you choose them; plain HTTP to 127.0.0.1 only with the lab switch). Background work: one daemon
-worker thread per process for the pipeline and one for dispatch. No shell commands, no
+worker thread per process for the pipeline, one for dispatch, and one that rereads the delivery settings every 5 seconds. No shell commands, no
 credentials read from files, no telemetry to ASV Labs, no self-updater. The install scanner
 reports *caution* because the detector lists the very patterns it looks for (ssh directories,
 webhook hosts, `curl | sh`, cron, env dumps) in `siemless_core/sensitive.py` and in the tests.

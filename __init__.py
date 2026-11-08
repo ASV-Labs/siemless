@@ -13,12 +13,13 @@ from typing import Optional
 
 from .siemless_core import PLUGIN_ID, __version__
 from .siemless_core.collectors import HOOKS
-from .siemless_core.config import load as load_config
+from .siemless_core.config import delivery_settings, load as load_config
 
 log = logging.getLogger("hermes.plugins.siemless")
 
 _pipeline = None
 _config: Optional[dict] = None
+_ctx = None
 
 
 def _emit(event: str, payload: dict) -> None:
@@ -47,12 +48,14 @@ def get_pipeline(config: Optional[dict] = None, profile: Optional[str] = None):
     if _pipeline is None:
         from .siemless_core.pipeline import Pipeline
 
-        _pipeline = Pipeline(config or _config or load_config(), emit=_emit, profile=profile)
+        reload_config = (lambda: delivery_settings(_ctx)) if _ctx is not None else None
+        _pipeline = Pipeline(config or _config or load_config(), emit=_emit, profile=profile, reload_config=reload_config)
     return _pipeline
 
 
 def register(ctx) -> None:
-    global _config
+    global _config, _ctx
+    _ctx = ctx
     _config = load_config(ctx)
     profile = _profile_name(ctx)
 

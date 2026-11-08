@@ -401,7 +401,7 @@ def _exec_events(cmd: str, tool: str, ids: dict, vis_ok: str, ok: bool = True) -
     # exactly like web_extract. Agents fall back to the shell when web_extract refuses a host (private
     # addresses), so without this the text that carries an injection is never marked untrusted or scanned.
     fetched = [d for d in S.egress_from_command(cmd) if d.get("url")]
-    if fetched and ok:
+    if fetched and ok and not S.only_uploads_files(cmd):
         host = fetched[0].get("host")
         out.append(Event(kind="content.untrusted", visibility=INFERRED, tool=tool, action="fetch", host=host,
                          attrs={"urls": len(fetched), "client": fetched[0].get("client")},

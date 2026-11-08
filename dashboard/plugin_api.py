@@ -150,7 +150,7 @@ def hosts(limit: int = Query(200, ge=1, le=5000)):
 @router.get("/exporters")
 def exporters():
     p = _pipeline()
-    return {"exporters": p.dispatcher.health(), "queue": p.dispatcher.queue_health(), "remote_export": bool(p.config.get("remote_export"))}
+    return {"exporters": p.exporter_health(), "queue": p.dispatcher.queue_health(), "remote_export": bool(p.config.get("remote_export"))}
 
 
 @router.post("/exporters/test")
