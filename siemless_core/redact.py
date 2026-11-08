@@ -44,8 +44,10 @@ _PREFIXES = [
     "ey" + "J",  # JWT header start (base64 of '{"')
 ]
 
+# Unlike lineage, a credential-shaped token *inside a path* (``/tmp/ghp_…/notes.txt``) is masked too: SIEMless
+# exports off the machine, so a false positive on an odd directory name costs less than a leak.
 _PREFIX_RE = re.compile(
-    r"(?<![A-Za-z0-9_/+-])(?:" + "|".join(re.escape(p) for p in _PREFIXES) + r")[A-Za-z0-9_\-./+=]{16,}"
+    r"(?<![A-Za-z0-9_+-])(?:" + "|".join(re.escape(p) for p in _PREFIXES) + r")[A-Za-z0-9_\-.+=]{16,}"
 )
 
 # key = value / key: value / "key": "value" with a credential-looking key name.
