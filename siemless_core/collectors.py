@@ -185,7 +185,7 @@ def _tool_call(p: dict, cfg: dict) -> list[Event]:
         out += _file_event("file.write", "write", path, derived_vis, tool, ids)
     # --- shell / code
     elif tool in S.EXEC_TOOLS and cmd:
-        out += _exec_events(cmd, tool, ids, derived_vis)
+        out += _exec_events(cmd, tool, ids, derived_vis, ok=ok)
     # --- web
     elif tool == "web_search":
         q = S.first_str(args, "query", "q")
@@ -201,8 +201,9 @@ def _tool_call(p: dict, cfg: dict) -> list[Event]:
             host = S.host_of(u)
             out.append(Event(kind="net.egress", visibility=derived_vis, tool=tool, action="fetch", outcome=status, host=host,
                              target=redact_text(u)[:300], tags=["egress:fetch"] + S.classify_host(host), **ids))
-        out.append(Event(kind="content.untrusted", visibility=derived_vis, tool=tool, action="fetch", outcome=status,
-                         host=S.host_of(urls[0]) if urls else None, attrs={"urls": len(urls)}, tags=["untrusted:web_fetch"], **ids))
+        if ok:  # a blocked or failed fetch brought nothing into the context; the attempt is the egress above
+            out.append(Event(kind="content.untrusted", visibility=derived_vis, tool=tool, action="fetch", outcome=status,
+                             host=S.host_of(urls[0]) if urls else None, attrs={"urls": len(urls)}, tags=["untrusted:web_fetch"], **ids))
     # --- browser
     elif tool.startswith(S.BROWSER_TOOLS_PREFIX):
         action = S.browser_action(tool, args)
@@ -348,7 +349,7 @@ _WRITE_HINT = ("> ", ">>", " tee ", "sed -i", " cp ", " mv ", "install ", "ln -s
 MAX_COMMAND_SCAN = 16_000  # characters of a command/script the classifiers look at (heredocs can be huge)
 
 
-def _exec_events(cmd: str, tool: str, ids: dict, vis_ok: str) -> list[Event]:
+def _exec_events(cmd: str, tool: str, ids: dict, vis_ok: str, ok: bool = True) -> list[Event]:
     """A terminal/execute_code call: one process.exec plus whatever the command text implies."""
     full_len = len(cmd)
     cmd = cmd[:MAX_COMMAND_SCAN]
@@ -396,6 +397,15 @@ def _exec_events(cmd: str, tool: str, ids: dict, vis_ok: str) -> list[Event]:
                          target=redact_text(dest.get("url") or host or "")[:300],
                          attrs={"client": dest.get("client"), "port": dest.get("port")},
                          tags=["egress:shell"] + S.classify_host(host), **ids))
+    # A URL fetched from the shell (curl, wget, python -c urllib …) returns its body into the agent's context,
+    # exactly like web_extract. Agents fall back to the shell when web_extract refuses a host (private
+    # addresses), so without this the text that carries an injection is never marked untrusted or scanned.
+    fetched = [d for d in S.egress_from_command(cmd) if d.get("url")]
+    if fetched and ok:
+        host = fetched[0].get("host")
+        out.append(Event(kind="content.untrusted", visibility=INFERRED, tool=tool, action="fetch", host=host,
+                         attrs={"urls": len(fetched), "client": fetched[0].get("client")},
+                         tags=["untrusted:shell_fetch"], **ids))
     if "cmd:git_push" in tags or "cmd:gh_publish" in tags:
         out.append(Event(kind="net.egress", visibility=INFERRED, tool=tool, action="publish", target=ev.target, severity="low",
                          tags=["egress:publish"] + [t for t in tags if t in ("cmd:git_push", "cmd:gh_publish", "cmd:git_remote_change")], **ids))

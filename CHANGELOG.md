@@ -43,3 +43,8 @@ First release, built for the Nous Research Hermes Agent Plugin Hackathon.
 - JSONL lines escape U+2028/U+2029/U+0085 and other `splitlines()` breakers.
 - Dashboard: the cached read pipeline is per profile data directory, so one dashboard process serving several
   profiles never shows one profile's findings to another (found while reviewing the Mac live test).
+
+### Fixed after the first live run on a Mac (Hermes 0.23.0, grok-4.7; tests/test_live_mac_run.py)
+
+- A URL fetched from the shell (`curl`, `wget`, `python -c urllib …`) is now untrusted content, inferred, tagged `untrusted:shell_fetch`, and its output is scanned for injection markers. In the live run Hermes's `web_extract` refused 127.0.0.1, the model fetched the page with `curl`, and that was the path the injected text took.
+- A blocked or failed `web_extract`/`x_search` is recorded as an egress attempt only, no longer as untrusted content entering the context.
