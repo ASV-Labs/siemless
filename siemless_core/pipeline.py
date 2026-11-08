@@ -229,13 +229,16 @@ class Pipeline:
         return {
             "plugin": PLUGIN_ID, "version": __version__, "profile": self.profile, "hostname": self.hostname,
             "started_at": self.started_at, "processed": self.processed, "dropped_in": self.dropped_in,
-            "findings_total": self.findings_total, "last_event_at": self.last_event_at, "last_finding_at": self.last_finding_at,
+            # Totals come from the store: the Desktop page and the CLI read through their own process, whose
+            # in-memory counter is always 0 (it raised nothing itself). The counter stays as since_start.
+            "findings_total": sum(self.store.finding_counts().values()), "findings_since_start": self.findings_total,
+            "last_event_at": self.last_event_at, "last_finding_at": self.last_finding_at,
             "events_24h": self.store.count_events(since_day), "kinds_24h": self.store.kind_counts(since_day),
             "findings_24h": self.store.finding_counts(since_day), "rules_24h": self.store.rule_counts(since_day),
             "rules": {"enabled": len(self.engine.rules), "evaluations": self.engine.evaluations, "suppressed": self.engine.suppressed},
             "correlator": self.corr.stats(), "queue": self.dispatcher.queue_health(), "exporters": exporters, "live": self.live,
             "export_scope": self.config["export_scope"], "remote_export": bool(self.config.get("remote_export")),
-            "db_bytes": self.store.db_size(), "hosts_known": self.store.host_count(),
+            "db_bytes": self.store.db_size(), "hosts_known": self.store.host_count(), "sessions_24h": self.store.session_count(since_day),
             "latency_ms": {"p50": _pct(self.latency_ms, 50), "p95": _pct(self.latency_ms, 95), "n": len(self.latency_ms)},
         }
 

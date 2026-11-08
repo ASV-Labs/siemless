@@ -14,15 +14,15 @@
    "spool_bytes": 0,
    "remote": false,
    "format": "ocsf",
-   "events_path": "/tmp/tmp8u6u3iv_/events.jsonl",
-   "findings_path": "/tmp/tmp8u6u3iv_/findings.jsonl",
+   "events_path": "/tmp/tmp_dk587_d/events.jsonl",
+   "findings_path": "/tmp/tmp_dk587_d/findings.jsonl",
    "max_mb": 50
   }
  ],
  "queue": {
-  "size": 15,
+  "size": 16,
   "capacity": 10000,
-  "received": 15,
+  "received": 16,
   "dropped": 0,
   "worker_alive": false
  },

@@ -336,6 +336,14 @@ class Store:
             self._conn.commit()
 
     # --------------------------------------------------------------- retention
+    def session_count(self, since: Optional[int] = None) -> int:
+        """Distinct agent sessions with at least one event (since *since*, ms)."""
+        with self._lock:
+            q = "SELECT COUNT(DISTINCT session_id) FROM events WHERE session_id IS NOT NULL AND session_id != ''"
+            if since is None:
+                return int(self._conn.execute(q).fetchone()[0])
+            return int(self._conn.execute(q + " AND time >= ?", (since,)).fetchone()[0])
+
     def host_count(self) -> int:
         with self._lock:
             return int(self._conn.execute("SELECT COUNT(*) FROM hosts_seen").fetchone()[0])
