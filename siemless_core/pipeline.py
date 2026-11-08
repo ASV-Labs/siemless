@@ -183,8 +183,14 @@ class Pipeline:
                 pass
 
     # ------------------------------------------------------------------ status
+    @property
+    def live(self) -> bool:
+        """True in the process that owns the hooks; False for a read-only instance over the same store."""
+        return self._thread is not None
+
     def status(self) -> dict:
         since_day = int(time.time() * 1000) - 86_400_000
+        exporters = self.dispatcher.health() if self.live else self._stored_exporters()
         return {
             "plugin": PLUGIN_ID, "version": __version__, "profile": self.profile, "hostname": self.hostname,
             "started_at": self.started_at, "processed": self.processed, "dropped_in": self.dropped_in,
@@ -192,11 +198,22 @@ class Pipeline:
             "events_24h": self.store.count_events(since_day), "kinds_24h": self.store.kind_counts(since_day),
             "findings_24h": self.store.finding_counts(since_day), "rules_24h": self.store.rule_counts(since_day),
             "rules": {"enabled": len(self.engine.rules), "evaluations": self.engine.evaluations, "suppressed": self.engine.suppressed},
-            "correlator": self.corr.stats(), "queue": self.dispatcher.queue_health(), "exporters": self.dispatcher.health(),
+            "correlator": self.corr.stats(), "queue": self.dispatcher.queue_health(), "exporters": exporters, "live": self.live,
             "export_scope": self.config["export_scope"], "remote_export": bool(self.config.get("remote_export")),
             "db_bytes": self.store.db_size(), "hosts_known": len(self.store.hosts(100000)),
             "latency_ms": {"p50": _pct(self.latency_ms, 50), "p95": _pct(self.latency_ms, 95), "n": len(self.latency_ms)},
         }
+
+    def _stored_exporters(self) -> list[dict]:
+        rows = self.store.exporter_health()
+        described = {s.exporter.name: s.exporter.describe() for s in self.dispatcher.slots.values()}
+        out = []
+        for r in rows:
+            d = dict(r)
+            d["enabled"] = bool(d.get("enabled"))
+            d.update(described.get(d["name"], {}))
+            out.append(d)
+        return out
 
     def flush(self, timeout: float = 3.0) -> None:
         """Tests: wait for the input queue and dispatcher to drain."""
