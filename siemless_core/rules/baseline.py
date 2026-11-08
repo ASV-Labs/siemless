@@ -330,9 +330,11 @@ class ApprovalAnomaly(_Base):
             denied = ctx.recent(["approval.response"], before=event, within_ms=2 * MIN, predicate=lambda e: e.outcome == "denied")
             if not denied:
                 return None
-            sha = (event.attrs.get("args") or {}).get("command")
+            cmd = (event.attrs.get("args") or {}).get("command")
+            if isinstance(cmd, dict):
+                cmd = cmd.get("$preview")
             for d in denied:
-                if d.target and event.attrs.get("args") and isinstance(sha, str) and d.target[:40] and d.target[:40] in str(sha):
+                if d.target and isinstance(cmd, str) and d.target[:40] and d.target[:40] in cmd:
                     return self._finding(event, [d], title="Command retried after denial",
                                          observed=f"A terminal call resembling the denied command ({d.target[:60]}) ran within two minutes of the denial.",
                                          why="Working around a denial is exactly what approvals exist to prevent.",

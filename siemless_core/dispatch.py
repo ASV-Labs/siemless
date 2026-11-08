@@ -135,6 +135,7 @@ class Dispatcher:
         self._on_health = on_health
         self._stop = threading.Event()
         self._lock = threading.Lock()
+        self._deliver_lock = threading.Lock()  # test-exporter and replay deliver from other threads
         self._thread: Optional[threading.Thread] = None
         self._last_health = 0.0
         if worker:
@@ -206,6 +207,10 @@ class Dispatcher:
 
     def deliver(self, batch: list[Event]) -> None:
         """Synchronous delivery of one batch to every enabled exporter (also used directly by tests)."""
+        with self._deliver_lock:
+            self._deliver(batch)
+
+    def _deliver(self, batch: list[Event]) -> None:
         now = time.monotonic()
         with self._lock:
             slots = list(self.slots.values())

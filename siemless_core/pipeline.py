@@ -56,6 +56,7 @@ class Pipeline:
         self._stop = threading.Event()
         self._thread: Optional[threading.Thread] = None
         self._last_prune = 0.0
+        self._process_lock = threading.RLock()  # replay/test paths run on other threads than the worker
         if worker:
             self._thread = threading.Thread(target=self._run, name="siemless-pipeline", daemon=True)
             self._thread.start()
@@ -146,6 +147,10 @@ class Pipeline:
                 log.debug("siemless pipeline: %s", exc)
 
     def _process(self, e: Event) -> list[dict]:
+        with self._process_lock:
+            return self._process_locked(e)
+
+    def _process_locked(self, e: Event) -> list[dict]:
         t0 = time.monotonic()
         self.store.add_events([e])
         self.processed += 1

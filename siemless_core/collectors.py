@@ -356,13 +356,13 @@ def _approval_response(p: dict, cfg: dict) -> list[Event]:
                   target=S.command_preview(redact_text(cmd or ""), 200), attrs={k: v for k, v in attrs.items() if v is not None}, **ids)]
 
 
-def _human_input(p: dict, cfg: dict) -> list[Event]:
-    ids = _ids(p)
-    ids["session_id"] = ids["session_id"] or _s(p.get("session_key"))
-    attrs = {"kind": _s(p.get("kind")), "request_id": _s(p.get("request_id"))}
-    outcome = _s(p.get("outcome"))
-    action = "resolved" if outcome or "resolved" in str(p.get("_hook", "")) else "request"
-    return [Event(kind="human_input", action=action, outcome=outcome, attrs={k: v for k, v in attrs.items() if v}, **ids)]
+def _human_input(action: str):
+    def fn(p: dict, cfg: dict) -> list[Event]:
+        ids = _ids(p)
+        ids["session_id"] = ids["session_id"] or _s(p.get("session_key"))
+        attrs = {"kind": _s(p.get("kind")), "request_id": _s(p.get("request_id"))}
+        return [Event(kind="human_input", action=action, outcome=_s(p.get("outcome")), attrs={k: v for k, v in attrs.items() if v}, **ids)]
+    return fn
 
 
 # -------------------------------------------------------------------------------- subagents
@@ -460,8 +460,8 @@ _HANDLERS = {
     "post_tool_call": _tool_call,
     "pre_approval_request": _approval_request,
     "post_approval_response": _approval_response,
-    "on_human_input_request": _human_input,
-    "on_human_input_resolved": _human_input,
+    "on_human_input_request": _human_input("request"),
+    "on_human_input_resolved": _human_input("resolved"),
     "subagent_start": _subagent_start,
     "subagent_stop": _subagent_stop,
     "pre_command": _command,
