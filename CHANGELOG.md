@@ -31,3 +31,13 @@ First release, built for the Nous Research Hermes Agent Plugin Hackathon.
   redirects never followed; spool records are one line whatever the content; lazy token resolution.
 - Store: retention runs on busy agents; `hosts_seen` pruned; Wazuh named rules ordered before severity fallbacks;
   Sigma correlations group by session; demo receiver hardened and logs outside the plugin tree.
+
+### Hardened after independent audit round 2 (audit/round2.md: 2 high, 2 medium — all fixed)
+
+- Telemetry tamper through an interpreter (`os.remove`, `shutil.rmtree`, `os.rename`, `Path.unlink`, `open(…, "w")`)
+  on SIEMless's own data is critical SL-010; `events.jsonl`/`findings.jsonl` count only inside SIEMless's directory.
+- Redaction: `redis-cli -a`, npm `_authToken`/`_auth`/`_password`, `.netrc` `password <value>`, `*_AUTH`/`*_PASS` env
+  assignments. 27 canaries.
+- Unknown tools: every path- or URL-shaped string argument is classified, whatever its name (bounded).
+- SL-001 capped at medium for a reply on the agent's own channel (no external host).
+- JSONL lines escape U+2028/U+2029/U+0085 and other `splitlines()` breakers.

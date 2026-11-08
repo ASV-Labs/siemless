@@ -20,8 +20,9 @@ hermes plugins install siemless
 
 > Hermes ≥ 0.21.5. Python standard library only; FastAPI (already in Hermes) for the Desktop
 > page's backend. Upstream `hermes plugins validate`: 16/16 checks pass; security scan *caution*
-> (see Disclosure); the one rule-9 warning is `tools/admission_lint.py`, a dev script the plugin
-> never imports.
+> (see Disclosure), so the installer asks you to confirm before it installs (`[y/N]`, or `--force`
+> when scripted) — the findings are SIEMless's own detection patterns. The one rule-9 warning is
+> `tools/admission_lint.py`, a dev script the plugin never imports.
 
 ## What you get
 
@@ -88,7 +89,10 @@ Hermes observer hooks ──▶ collect() ──▶ bounded queue ──▶ work
   credential access is *critical* only when the content carried markers; a plain docs fetch followed
   by a config edit is *high* (ordinary research looks like that too).
 * Tools SIEMless has no dedicated collector for (MCP servers, other plugins) still produce file,
-  secret, config and egress events from their path/url arguments, labelled *inferred*.
+  secret, config and egress events: every string argument that looks like a path or URL is
+  classified (bounded), whatever the argument is called, and the events are labelled *inferred*.
+* A credential read followed only by a reply on the agent's own chat channel is SL-001 *medium*,
+  not high; SL-013 covers chat-channel exfiltration and escalates on message size.
 * Suppression: `allow_hosts`, `allow_paths` (prefixes match whole path segments after
   normalisation, so `proj/../.ssh` is not inside `proj`), `disable_rules`, and a per-rule dedupe
   cooldown that never masks an escalation (a later, more severe finding of the same kind fires).
@@ -159,10 +163,11 @@ length (`record_prompts: true` adds a 200-character redacted preview). Tool argu
 to ~1.5 KB per call (strings, dicts and lists share one budget) and redacted with patterns for
 vendor key prefixes (Anthropic, OpenAI, GitHub, AWS incl. STS, Stripe, SendGrid, DigitalOcean,
 Grafana, Linear, Slack, Atlassian, Netlify, Pulumi, age …), `key=value` secrets (quoted or not),
-CLI credential flags (`curl -u`, `--password`, `mysql -p`, `sshpass -p`), bearer tokens, PEM blocks
+CLI credential flags (`curl -u`, `--password`, `mysql -p`, `sshpass -p`, `redis-cli -a`), npm
+`_authToken`/`_auth`, `.netrc` `password` words, bearer tokens, PEM blocks
 of any length, URL credentials, query-string secrets, Slack/Discord/Office webhook paths and
 Telegram bot-token paths (adapted from lineage, same author). Redaction runs before any cut. A
-canary test proves none of 23 synthetic secret shapes reaches the store, the exports or any
+canary test proves none of 27 synthetic secret shapes reaches the store, the exports or any
 rendered format.
 
 **Where.** `<HERMES_HOME>/plugin-data/siemless/`: `siemless.db` (0600, in a 0700 dir), `events.jsonl`,
@@ -209,7 +214,7 @@ demo is the replay.
 ## Development
 
 ```
-python -m pytest -q tests                       # 120 tests: rules, formats (OCSF validated against the 1.9.0 schema), dispatch, privacy canaries, API, demo variants, packs, audit regressions
+python -m pytest -q tests                       # 132 tests: rules, formats (OCSF validated against the 1.9.0 schema), dispatch, privacy canaries, API, demo variants, packs, audit regressions
 cd tests/js && npm install && npm test          # Desktop page rendered against real backend fixtures (tests/js/make_fixtures.py)
 python tests/bench.py                           # agent-thread cost and detection latency
 python tools/gen_sigma.py                       # regenerate the Sigma pack
@@ -217,8 +222,9 @@ python tools/ocsf_check.py --schema <ocsf-schema checkout> --compile siemless_co
 python tools/admission_lint.py <hermes-agent checkout>   # upstream's own `hermes plugins validate` logic (needs ruamel.yaml + packaging)
 ```
 
-Independent audit: [audit/round1.md](audit/round1.md) (5 high, 14 medium, 9 low; all fixed, each with a
-regression test in `tests/test_audit_round1.py` / `tests/test_round1_fixes.py`).
+Independent audits: [audit/round1.md](audit/round1.md) (5 high, 14 medium, 9 low) and
+[audit/round2.md](audit/round2.md) (2 high, 2 medium). All fixed; every finding has a regression
+test (`tests/test_audit_round1.py`, `tests/test_round1_fixes.py`, `tests/test_audit_round2.py`).
 
 Research behind the shapes and mappings, with sources and what remains unverified:
 [docs/RESEARCH.md](docs/RESEARCH.md). Baseline state when the build started: [docs/BASELINE.md](docs/BASELINE.md).

@@ -11,6 +11,8 @@ from pathlib import Path
 from ..events import Event
 from . import Exporter, ExportError, render
 
+_LINE_SEPS = {c: f"\\u{c:04x}" for c in (0x0B, 0x0C, 0x1C, 0x1D, 0x1E, 0x85, 0x2028, 0x2029)}
+
 
 class JsonlExporter(Exporter):
     name = "jsonl"
@@ -29,6 +31,8 @@ class JsonlExporter(Exporter):
         ev_lines, f_lines = [], []
         for e in batch:
             line = render(e, self.fmt, hostname=self.hostname)
+            # One record per "\n" for every reader: escape the characters str.splitlines() also breaks on.
+            line = line.translate(_LINE_SEPS)
             (f_lines if e.kind == "finding" else ev_lines).append(line)
         try:
             if ev_lines:

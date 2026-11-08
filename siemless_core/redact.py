@@ -69,9 +69,11 @@ _PREFIX_RE = re.compile(
 
 # key = value / key: value / "key": "value" with a credential-looking key name.
 _KV_RE = re.compile(
-    r"(?i)(\b(?:api[_-]?key|access[_-]?key|secret[_-]?key|client[_-]?secret|private[_-]?key(?:[_-]?id)?|"
-    r"auth[_-]?token|access[_-]?token|refresh[_-]?token|id[_-]?token|session[_-]?token|"
-    r"token|secret|password|passwd|pwd|credential|authorization|cookie|set-cookie)"
+    # (?<![A-Za-z0-9]) rather than \b: npm's ``//registry/:_authToken=`` and ``:_password=`` put an
+    # underscore (a word character) right before the key.
+    r"(?i)((?<![A-Za-z0-9])(?:api[_-]?key|access[_-]?key|secret[_-]?key|client[_-]?secret|private[_-]?key(?:[_-]?id)?|"
+    r"auth[_-]?token|access[_-]?token|refresh[_-]?token|id[_-]?token|session[_-]?token|npm[_-]?token|"
+    r"token|secret|password|passwd|pwd|credential|authorization|cookie|set-cookie|_auth)"
     r"[\"']?\s*[:=]\s*)(\"[^\"\n]+\"|'[^'\n]+'|[^\s\"',;&]{6,})"
 )
 
@@ -91,6 +93,9 @@ _CLI_SECRET_FLAG_RE = re.compile(
     r"[a-z0-9-]*(?:\s+|=))(['\"]?)((?!-)[^\s'\"]+)(\2)")
 #   mysql -uroot -pPASS (password glued to -p), sshpass -p PASS
 _MYSQL_P_RE = re.compile(r"(\b(?:mysql|mysqldump|mysqladmin|mysqlsh|mariadb|mariadb-dump|mysqlimport)\b[^|;&\n]*?\s-p)(['\"]?)([^\s'\"]+)(\2)")
+_REDIS_PASS_RE = re.compile(r"(\b(?:redis-cli|valkey-cli|keydb-cli)\b[^|;&\n]*?\s(?:-a|--pass|--password)\s+)(['\"]?)([^\s'\"]+)(\2)")
+# .netrc lines separate key and value with whitespace: ``machine h login u password p``.
+_NETRC_RE = re.compile(r"(?i)(\b(?:machine|login|account|default)\b[^\n]{0,200}?\b(?:password|passwd)\s+)(['\"]?)([^\s'\"]+)(\2)")
 _SSHPASS_RE = re.compile(r"(\bsshpass\s+-p\s*)(['\"]?)([^\s'\"]+)(\2)")
 # Webhook URLs carry their credential in the path.
 _WEBHOOK_PATH_RE = re.compile(
@@ -144,7 +149,7 @@ _PATH_TOKEN_RE = re.compile(r"(/bot|(?<![A-Za-z0-9]))(\d{6,}:[A-Za-z0-9_-]{30,})
 
 # Env-var style assignments inside shell commands: FOO_TOKEN=abc, export X_KEY="..."
 _ENV_ASSIGN_RE = re.compile(
-    r"(?i)\b([A-Z][A-Z0-9_]*(?:KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIALS?)[A-Z0-9_]*\s*=\s*)([\"']?)([^\s\"']{4,})(\2)"
+    r"(?i)\b([A-Z][A-Z0-9_]*(?:KEY|TOKEN|SECRET|PASSWORD|PASSWD|PASS(?![A-Z])|PWD|AUTH(?![A-Z])|CREDENTIALS?)[A-Z0-9_]*\s*=\s*)([\"']?)([^\s\"']{4,})(\2)"
 )
 
 # Argument names are compared with case, '_' and '-' removed, so accessToken, access_token and
@@ -175,6 +180,8 @@ def redact_text(text: str) -> str:
     out = _CLI_USERPASS_RE.sub(lambda m: f"{m.group(1)}{MASK}{m.group(4)}", out)
     out = _MYSQL_P_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}{MASK}{m.group(4)}", out)
     out = _SSHPASS_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}{MASK}{m.group(4)}", out)
+    out = _REDIS_PASS_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}{MASK}{m.group(4)}", out)
+    out = _NETRC_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}{MASK}{m.group(4)}", out)
     out = _CLI_SECRET_FLAG_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}{MASK}{m.group(4)}", out)
     out = mask_query_secrets(out, MASK)
     out = _PATH_TOKEN_RE.sub(lambda m: f"{m.group(1) or ''}{MASK}", out)

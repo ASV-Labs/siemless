@@ -172,6 +172,10 @@ def v8():
     r.tool("write_file", {"path": f"{HOME}/key.pem", "content": f"-----BEGIN {PEM_KIND}-----\n{pem_body}\n-----END {PEM_KIND}-----"})
     r.tool("mcp_vault_put", {"path": "/tmp/x", "api_key=CANARYKEYINKEY42": "v", "nested": {"password": "CANARYNESTEDPW8"},
                              "items": ["token=CANARYLISTTOKEN6"] * 60})
+    # Audit round 2 (R2-L1)
+    r.tool("terminal", {"command": "redis-cli -a CANARYREDISPW11 -h db ping; REDISCLI_AUTH=CANARYREDISENV12 redis-cli; "
+                                   "printf '//registry.npmjs.org/:_auth' > /dev/null; echo //registry.npmjs.org/:_authToken=CANARYNPMTOKEN13"})
+    r.tool("write_file", {"path": f"{HOME}/notes.txt", "content": "machine h.example.com login u password CANARYNETRCPW14"})
     r.add("kanban_task_blocked", {"task_id": "t1", "board": "deploy token=CANARYKANBANTOK1", "assignee": "w", **r.ids()})
     r.add("on_session_end", {"reason": "failed: password=CANARYREASONPW2", "completed": False, **r.ids()})
     r.write("8_redaction_canaries", TEST_OUT)
@@ -180,7 +184,8 @@ def v8():
                                                         "CANARYCURLPASS9", "CANARYMYSQLPW7", "CANARYFLAGPASS5", "CANARYSSHPASS3",
                                                         C_STRIPE, C_STS, C_SG, C_SLACK, C_DISCORD, "CANARYPEMLONG",
                                                         "CANARYKEYINKEY42", "CANARYNESTEDPW8", "CANARYLISTTOKEN6",
-                                                        "CANARYKANBANTOK1", "CANARYREASONPW2"]}
+                                                        "CANARYKANBANTOK1", "CANARYREASONPW2", "CANARYREDISPW11", "CANARYREDISENV12",
+                                                        "CANARYNPMTOKEN13", "CANARYNETRCPW14"]}
 
 
 def main():

@@ -108,6 +108,10 @@ class SecretAccessThenEgress(_Base):
             attack = [T["T1552.001"], T["T1567.004"], T["T1700"]]
         elif "egress:dev" in event.tags and event.action != "send":
             sev = "medium"  # package registries and GitHub are usual destinations
+        elif event.action == "send" and not event.host:
+            # A reply on the agent's own chat channel (no external host): routine after editing a .env.
+            # SL-013 carries the chat-channel exfil case and escalates on message size.
+            sev = "medium"
         f = self._finding(
             event, secrets[:5],
             title=f"Sensitive access then egress to {event.host or event.target or 'a destination'}",

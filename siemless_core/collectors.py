@@ -240,23 +240,28 @@ def _tool_call(p: dict, cfg: dict) -> list[Event]:
         if action in MUTATING_SKILL_ACTIONS:
             out.append(Event(kind="skill.change", visibility=derived_vis, tool=tool, action=action, outcome=status,
                              target=preview(S.first_str(args, "name", "skill", "skill_name"), 80), tags=["config:hermes_skills"], **ids))
-    elif path and _is_other_tool(tool):
-        # Any other tool (MCP servers, other plugins) that names a path: derive file/secret/config events
-        # from it like the built-in file tools, labelled inferred because the tool's semantics are unknown.
-        tags = S.classify_path(path)
-        if tags or S.is_untrusted_path(path):
-            base.tags += tags
-            base.target = redact_text(path)[:300]
-            action = "write" if _WRITE_TOOL_RE.search(tool) else "read"
-            derived = _file_event("file.write" if action == "write" else "file.read", action, path, INFERRED, tool, ids)
+    if _is_other_tool(tool):
+        # Tools SIEMless has no collector for (MCP servers, other plugins) name their arguments however they
+        # like (location, input, endpoint, callback …), so every string argument is a candidate, bounded.
+        # Derived events are labelled inferred: the tool's semantics are unknown.
+        paths, urls = _other_tool_targets(args, path, url)
+        action = "write" if _WRITE_TOOL_RE.search(tool) else "read"
+        for pth in paths:
+            tags = S.classify_path(pth)
+            if not (tags or S.is_untrusted_path(pth)):
+                continue
+            base.tags += [t for t in tags if t not in base.tags]
+            base.target = base.target or redact_text(pth)[:300]
+            derived = _file_event("file.write" if action == "write" else "file.read", action, pth, INFERRED, tool, ids)
             for e in derived:
                 e.tags.append("via:other_tool")
             out += derived
-    if url and _is_other_tool(tool):
-        host = S.host_of(url)
-        if host:
+        for u in urls:
+            host = S.host_of(u)
+            if not host:
+                continue
             out.append(Event(kind="net.egress", visibility=INFERRED, tool=tool, action="fetch", outcome=status, host=host,
-                             target=redact_text(url)[:300], tags=["egress:other_tool"] + S.classify_host(host), **ids))
+                             target=redact_text(u)[:300], tags=["egress:other_tool"] + S.classify_host(host), **ids))
             out.append(Event(kind="content.untrusted", visibility=INFERRED, tool=tool, action="fetch", outcome=status,
                              host=host, tags=["untrusted:other_tool"], **ids))
     if isinstance(result, (str, bytes)) and any(e.kind == "content.untrusted" for e in out):
@@ -267,6 +272,42 @@ def _tool_call(p: dict, cfg: dict) -> list[Event]:
                     e.tags.append("untrusted:injection_markers")
                     e.attrs["injection_markers"] = markers
     return out
+
+
+_URLISH = re.compile(r"^(?:https?|wss?|ftp)://", re.I)
+_PATHISH = re.compile(r"^(?:/|~|\$\{?HOME\}?|\.{1,2}/|[A-Za-z]:[\\/])")
+MAX_OTHER_ARGS = 32       # string values looked at per call
+MAX_OTHER_TARGETS = 4     # paths and urls each
+
+
+def _other_tool_targets(args: dict, path: Optional[str], url: Optional[str]) -> tuple[list[str], list[str]]:
+    """Path-like and URL-like string values from an unknown tool's arguments (one level of nesting)."""
+    paths: list[str] = [path] if path else []
+    urls: list[str] = [url] if url else []
+    seen = 0
+    stack = list(args.values())[:MAX_OTHER_ARGS]
+    nested = 0
+    while stack and seen < MAX_OTHER_ARGS:
+        v = stack.pop(0)
+        if isinstance(v, dict) and nested < 4:
+            nested += 1
+            stack += list(v.values())[:8]
+            continue
+        if isinstance(v, (list, tuple)) and nested < 4:
+            nested += 1
+            stack += [x for x in v[:8]]
+            continue
+        if not isinstance(v, str) or not v or len(v) > 2048:
+            continue
+        seen += 1
+        t = v.strip()
+        if _URLISH.match(t):
+            if t not in urls and len(urls) < MAX_OTHER_TARGETS:
+                urls.append(t)
+        elif _PATHISH.match(t) and "\n" not in t:
+            if t not in paths and len(paths) < MAX_OTHER_TARGETS:
+                paths.append(t)
+    return paths, urls
 
 
 def _is_other_tool(tool: str) -> bool:

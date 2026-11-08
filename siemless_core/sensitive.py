@@ -48,7 +48,8 @@ _SENSITIVE_PATHS: list[tuple[re.Pattern, str]] = [
 
 # Files whose edit changes how the agent is governed. Tag names the control.
 _SECURITY_CONFIG_PATHS: list[tuple[re.Pattern, str]] = [
-    (re.compile(r"(^|/)plugin-data/siemless(/|$)|(^|/)siemless\.db(-wal|-shm)?$|(^|/)(events|findings)\.jsonl(\.\d+)?$"), "siemless"),
+    # events/findings.jsonl only inside SIEMless's own directory: other projects have files with those names.
+    (re.compile(r"(^|/)plugin-data/siemless(/|$)|(^|/)siemless\.db(-wal|-shm|-journal)?$|siemless/(events|findings)\.jsonl(\.\d+)?$"), "siemless"),
     (re.compile(r"(^|/)\.hermes/(profiles/[^/]+/)?config\.ya?ml$"), "hermes_config"),
     (re.compile(r"(^|/)\.hermes/(profiles/[^/]+/)?\.env$"), "hermes_env"),
     (re.compile(r"(^|/)\.hermes/(profiles/[^/]+/)?(SOUL|AGENTS|USER|MEMORY)\.md$", re.I), "agent_instructions"),
@@ -375,7 +376,12 @@ _CMD_PATTERNS: list[tuple[re.Pattern, str, str]] = [
     (re.compile(r"\bgh\s+(repo\s+create|release\s+(create|upload)|gist\s+create|secret\s+set)\b"), "cmd:gh_publish", "publishes through the GitHub CLI"),
     (re.compile(r"\bhermes\s+plugins?\s+(install|enable|disable|remove|update)\b"), "cmd:hermes_plugin", "changes installed plugins"),
     (re.compile(r"\bhermes\s+config\s+set\s+(approvals|terminal\.backend|plugins|hooks|auth|yolo)|\bHERMES_[A-Z_]*(YOLO|APPROVALS?_MODE)[A-Z_]*\s*=", re.I), "cmd:hermes_security_config", "changes a Hermes security setting"),
-    (re.compile(r"\b(rm|shred|truncate|unlink|mv|sqlite3|dd)\b[^|;&\n]*(plugin-data/siemless|siemless\.db|(events|findings)\.jsonl)|>\s*\S*(plugin-data/siemless|siemless\.db|(events|findings)\.jsonl)", re.I), "cmd:telemetry_tamper", "alters or deletes SIEMless's own records"),
+    # Any destructive verb (shell or interpreter: os.remove, shutil.rmtree, os.rename/replace, Path.unlink,
+    # open(..., "w")) anywhere in a command that names SIEMless's own data. Order-independent on purpose.
+    (re.compile(r"""(?is)^(?=.*(?:plugin-data/siemless|siemless\.db|siemless/(?:events|findings)\.jsonl))"""
+                r"""(?=.*(?:\b(?:rm|shred|truncate|unlink|mv|sqlite3|dd|rmdir|rmtree|remove|removedirs|rename|renames|replace|"""
+                r"""write_text|write_bytes|chmod|chattr|ftruncate|move|copyfile|wipe)\b|open\s*\([^)]*?,\s*['"][wax+]|>\s*\S))"""),
+     "cmd:telemetry_tamper", "alters or deletes SIEMless's own records"),
     (re.compile(r"\bhermes\s+siemless\s+(ack|replay)\b|plugins\.entries\.siemless|plugins\s+(disable|remove|uninstall)\s+siemless", re.I), "cmd:siemless_control", "changes what SIEMless records or reports"),
     (re.compile(r"\bhermes\s+(cron|schedule|jobs?)\s+(add|create|enable)\b"), "cmd:hermes_cron", "creates a Hermes scheduled job"),
     (re.compile(r"\b(tar|zip|7z|gzip)\b[^|;]*(\.ssh|\.aws|\.gnupg|\.env|credentials|keychain)", re.I), "cmd:credential_archive", "archives a credential store"),

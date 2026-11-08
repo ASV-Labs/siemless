@@ -43,7 +43,7 @@ inferred → low, and a rule may cap it lower (SL-002's causality is temporal, s
 |---|---|---|
 | Which tool ran, with what arguments, and did it succeed | **observed** | `post_tool_call` (`status`, `args`, `duration_ms`) |
 | A file read or written by the file tools | **observed** | `read_file` / `write_file` / `patch` args + status |
-| A file or URL named by a tool SIEMless has no collector for (MCP servers, other plugins) | **inferred** | `path`/`file_path`/`url`-style args through the same classifiers, tagged `via:other_tool` |
+| A file or URL named by a tool SIEMless has no collector for (MCP servers, other plugins) | **inferred** | every path- or URL-shaped string argument (any name, up to 32 values, 4 targets each) through the same classifiers, tagged `via:other_tool` |
 | A file touched by a shell command | **inferred** | path tokens in the command text; the OS call is not visible |
 | A credential store targeted | observed or inferred | path classifier over either of the above; the bytes are never seen |
 | An HTTP fetch by `web_extract` / browser navigation | **observed** | url arg + status |
