@@ -130,8 +130,9 @@ class Correlator:
         return out
 
     def tainted(self, st: SessionState, *, before: Event, within_ms: Optional[int] = None) -> list[Event]:
-        """Untrusted-content events that precede *before* in the window (this turn's taint source)."""
-        return self.recent(st, ["content.untrusted"], before=before, within_ms=within_ms)
+        """Untrusted-content events that precede *before* in the window, in this session or an ancestor:
+        a subagent's goal is written from the parent's context, so the parent's taint is the child's too."""
+        return self.recent(st, ["content.untrusted"], before=before, within_ms=within_ms, include_parents=True)
 
     def is_first_seen_host(self, host: Optional[str], when: int, event_id: Optional[str] = None) -> bool:
         """True the first time *host* is seen by this profile. Every rule asking about the same event gets

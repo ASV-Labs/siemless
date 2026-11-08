@@ -1,0 +1,81 @@
+{
+ "1_injection_succeeds": {
+  "rules": [
+   "SL-002",
+   "SL-001",
+   "SL-003"
+  ],
+  "not_rules": [],
+  "min_severity": {
+   "SL-001": "high"
+  }
+ },
+ "2_agent_refuses": {
+  "rules": [],
+  "not_rules": [
+   "SL-001",
+   "SL-002",
+   "SL-003"
+  ]
+ },
+ "3_secret_read_no_egress": {
+  "rules": [
+   "SL-003"
+  ],
+  "not_rules": [
+   "SL-001",
+   "SL-002"
+  ],
+  "max_severity": {
+   "SL-003": "medium"
+  }
+ },
+ "4_egress_without_secret": {
+  "rules": [],
+  "not_rules": [
+   "SL-001",
+   "SL-003",
+   "SL-012"
+  ]
+ },
+ "5_out_of_order": {
+  "rules": [
+   "SL-001"
+  ],
+  "not_rules": []
+ },
+ "6_subagent_carries_chain": {
+  "rules": [
+   "SL-008",
+   "SL-001",
+   "SL-002"
+  ],
+  "not_rules": []
+ },
+ "7_exporter_down": {
+  "rules": [
+   "SL-002",
+   "SL-001",
+   "SL-003"
+  ],
+  "not_rules": [],
+  "min_severity": {
+   "SL-001": "high"
+  },
+  "note": "same as 1; tests/test_demo.py knocks an exporter over mid-run and checks spool/health"
+ },
+ "8_redaction_canaries": {
+  "rules": [],
+  "not_rules": [],
+  "canaries": [
+   "CANARY0000000000000000000000000000000000",
+   "CANARY-ENV-VALUE-1234",
+   "CANARYBEARERTOKEN0000",
+   "CANARYQUERYKEY123456",
+   "CANARYBASE64LINE",
+   "CANARYPASSWORD",
+   "ghp_CANARY",
+   "AKIACANARY0000000000"
+  ]
+ }
+}

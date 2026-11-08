@@ -22,6 +22,7 @@ SCHEMA: dict[str, tuple[str, Any, str]] = {
     "approval_denies": ("int", 3, "SL-007: denials within five minutes that make a finding (default 3)."),
     "approval_burst": ("int", 6, "SL-007: approval prompts within one minute that make a finding (default 6)."),
     "allow_hosts": ("str", "", "Comma-separated hosts (or .suffixes) that are expected destinations; egress to them is not reported."),
+    "watch_private_hosts": ("bool", False, "Treat loopback and RFC 1918 destinations as egress for the rules (default false). The demo lab needs true."),
     "allow_paths": ("str", "", "Comma-separated path prefixes or suffixes your workflow legitimately touches (e.g. .env.example)."),
     "disable_rules": ("str", "", "Comma-separated rule ids to turn off (e.g. SL-004,SL-011)."),
     # local storage

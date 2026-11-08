@@ -72,6 +72,11 @@ config_schema:
     type: str
     default: ''
     description: Comma-separated hosts (or .suffixes) that are expected destinations; egress to them is not reported.
+  watch_private_hosts:
+    type: bool
+    default: false
+    description: Treat loopback and RFC 1918 destinations as egress for the rules (default false). The demo lab
+      needs true.
   allow_paths:
     type: str
     default: ''

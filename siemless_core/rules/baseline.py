@@ -38,7 +38,7 @@ def _is_external_egress(e: Event, ctx: RuleContext) -> bool:
         return False
     if "egress:provider" in e.tags:
         return False
-    if "egress:private" in e.tags:
+    if "egress:private" in e.tags and not ctx.config.get("watch_private_hosts"):
         return False
     if e.action == "send":
         return True  # a message leaves the machine whatever the host
