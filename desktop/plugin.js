@@ -24,6 +24,10 @@ import {
 import { createElement as h, useEffect, useMemo, useState } from 'react'
 
 const ID = 'siemless'
+// The version of this page. tests/test_packs.py keeps it equal to siemless_core.__version__.
+// Hermes Desktop copies this file into its own folder and, after a CLI install or update, keeps
+// serving the old copy until Capabilities › Plugins › Rescan (or a Desktop restart) re-copies it.
+const PAGE_VERSION = '0.1.2'
 const ROUTE = '/siemless'
 let REST = null // set in register(); ctx.rest is scoped to /api/plugins/siemless
 
@@ -365,6 +369,13 @@ function SiemlessPage() {
           )
         : null
     ),
+    st && st.version && st.version !== PAGE_VERSION
+      ? h(
+          'div',
+          { role: 'status', className: 'border-b border-(--ui-stroke-secondary) px-3 py-1.5 text-xs text-(--ui-warning)' },
+          `This page is SIEMless v${PAGE_VERSION}, but the agent runs v${st.version}. Press Rescan in Capabilities › Plugins, or restart Hermes Desktop, to load the matching page.`
+        )
+      : null,
     // tiles
     h(
       'div',

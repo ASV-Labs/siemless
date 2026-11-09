@@ -34,6 +34,11 @@ hermes plugins install ASV-Labs/siemless
 > confirm (`[y/N]`, or `--force` when scripted) — what it flags are SIEMless's own detection patterns. See [Disclosure](#disclosure).
 > Once the catalog listing is live: `hermes plugins install siemless`.
 
+> [!TIP]
+> **Updating from the CLI?** Hermes Desktop serves its own copy of the SIEMless page and does not refresh it on a
+> CLI install or update. Press **Rescan** in Capabilities › Plugins, or restart Hermes Desktop. Until then the page
+> tells you which version it is and which the agent runs.
+
 ## `01` The chain it catches
 
 <p align="center"><img src="docs/assets/killchain.svg" alt="Untrusted content → secret access → egress, with SL-002, SL-003 and SL-001" width="100%"></p>

@@ -45,6 +45,8 @@ const ctx = {
   onDispose: () => {}
 }
 
+const src_page_version = () => readFileSync(new URL('../../desktop/plugin.js', import.meta.url), 'utf8').match(/const PAGE_VERSION = '([^']+)'/)[1]
+
 const flush = async () => { for (let i = 0; i < 8; i++) await act(async () => { await new Promise((r) => setTimeout(r, 15)) }) }
 
 before(() => plugin.register(ctx))
@@ -78,6 +80,10 @@ test('page: tiles, findings list, evidence chain with visibility labels, ack, ta
   assert.match(html, /observed/)
   assert.match(html, /inferred/)
   assert.match(html, /T1700/)
+  // the fixture backend reports another version than the page: the page says how to reload itself
+  const notice = /This page is SIEMless v[\d.]+, but the agent runs v[\d.]+\. Press Rescan in Capabilities › Plugins/
+  if (fixtures.status.version !== src_page_version()) assert.match(html, notice)
+  else assert.doesNotMatch(html, notice)
   assert.match(html, /not visible to SIEMless/i)
   // targets are rendered as text (escaped), never as markup
   assert.ok(!html.includes('<script'))

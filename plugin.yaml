@@ -1,5 +1,5 @@
 name: siemless
-version: 0.1.1
+version: 0.1.2
 description: 'Agent security telemetry for SIEMs. Every tool call, file read, shell command, outbound request, approval,
   subagent, scheduled job and config change becomes an OCSF event; 14 deterministic rules correlate them into findings
   (secret access then egress, prompt-injection chains, credential discovery, persistence, governance tampering,

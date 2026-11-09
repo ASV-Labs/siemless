@@ -68,6 +68,8 @@ def test_plugin_yaml_schema_matches_code(core):
     assert manifest["config_schema"] == cfg.plugin_yaml_schema()
     assert manifest["provides_hooks"] == list(mod(core, "collectors").HOOKS)
     assert manifest["version"] == core.__version__
+    page = (PLUGIN_DIR / "desktop" / "plugin.js").read_text()
+    assert f"const PAGE_VERSION = '{core.__version__}'" in page, "desktop/plugin.js PAGE_VERSION must match __version__"
     assert manifest["requires_env"] == []
 
 

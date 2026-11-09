@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.2 — 2026-11-09
+
+- The Desktop page knows its own version and says so when the agent runs another one, with the fix: press Rescan in
+  Capabilities › Plugins, or restart Hermes Desktop. Hermes Desktop keeps its own copy of the page and does not
+  re-copy it after a CLI `hermes plugins install` or `update`; found while filming the demo, when the page kept
+  showing 0.1.0 times after the agent was on 0.1.1. A test keeps the page version equal to the package version.
+- README: how to refresh the Desktop page after a CLI update.
+
 ## 0.1.1 — 2026-11-08
 
 - From the design review: turning `remote_export` off, or clearing a destination, now reaches a running agent within seconds instead of waiting for a gateway restart. The Desktop page and CLI no longer show a stale failure after consent is withdrawn or a destination is cleared, and the Exporters tab reads stored health. A shell command that only uploads a file is no longer recorded as untrusted content coming in. 12-hour evidence times have no leading zero.

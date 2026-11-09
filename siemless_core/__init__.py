@@ -8,7 +8,7 @@ Nothing in here changes what the agent does.
 
 from __future__ import annotations
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 PLUGIN_ID = "siemless"
 SCHEMA_VERSION = "siemless.event.v1"
 VENDOR = "ASV Labs"
