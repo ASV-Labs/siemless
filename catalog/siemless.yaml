@@ -2,7 +2,7 @@
 # sha: pin to the release COMMIT (not the annotated tag object) when v0.1.0 is published.
 name: siemless
 repo: https://github.com/ASV-Labs/siemless
-sha: c2a5534017acc18c553200d7a04060247bc49095
+sha: a74bd96f2fc232e808db6242a6be642fa700db5e
 description: >-
   Agent security telemetry for SIEMs. Every tool call, file read, shell command, outbound request,
   approval, subagent, scheduled job and configuration change a Hermes agent makes becomes an OCSF 1.9
@@ -28,8 +28,8 @@ tier: community
 category: tools
 requires_hermes: ">=0.21.5"
 docs_url: https://github.com/ASV-Labs/siemless#readme
-version: "0.1.1"
-image: https://raw.githubusercontent.com/ASV-Labs/siemless/c2a5534017acc18c553200d7a04060247bc49095/docs/banner.png
+version: "0.1.2"
+image: https://raw.githubusercontent.com/ASV-Labs/siemless/a74bd96f2fc232e808db6242a6be642fa700db5e/docs/banner.png
 readme: true
 platforms: []
 capabilities:
