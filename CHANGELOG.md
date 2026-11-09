@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 — 2026-11-08
+
+- From the design review: turning `remote_export` off, or clearing a destination, now reaches a running agent within seconds instead of waiting for a gateway restart. The Desktop page and CLI no longer show a stale failure after consent is withdrawn or a destination is cleared, and the Exporters tab reads stored health. A shell command that only uploads a file is no longer recorded as untrusted content coming in. 12-hour evidence times have no leading zero.
+- The settings watch reads the profile that started it, so it works on a gateway that hosts several profiles. Found by a live test on a real gateway.
+- README redesign, new banner and social preview. The demo video is attached to this release.
+
 ## 0.1.0 — 2026-11-08
 
 First release, built for the Nous Research Hermes Agent Plugin Hackathon.
@@ -55,4 +61,3 @@ First release, built for the Nous Research Hermes Agent Plugin Hackathon.
 - Detection latency was always empty on the Desktop page and in `hermes siemless status`, which read through their own process; it is now stored with each finding (not exported) and read back from there.
 - `hermes siemless status` outside the agent printed that process's own zeros as if they were the agent's ("events processed 0"); it now shows store figures only, and the Desktop page shows the store size in place of a queue that is always empty there.
 - The demo receiver says plainly when its port is taken, and the page names the collector on the receiver's real port (`--port`).
-- From the design review: turning `remote_export` off, or clearing a destination, now reaches a running agent within seconds instead of waiting for a gateway restart. The Desktop page and CLI no longer show a stale failure after consent is withdrawn or a destination is cleared, and the Exporters tab reads stored health. A shell command that only uploads a file is no longer recorded as untrusted content coming in. 12-hour evidence times have no leading zero.
